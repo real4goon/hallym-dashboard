@@ -10,7 +10,7 @@
             --hi-blue: #41B6E6; 
             --hi-blue-hover: #2A9DD1;
             --hi-pink: #F15C75; 
-            --hi-pink-hover: #D14A5F; /* 분홍색 호버용 짙은 컬러 추가 */
+            --hi-pink-hover: #D14A5F;
         }
 
         /* 텍스트 드래그(선택) 방지 */
@@ -26,9 +26,36 @@
             -ms-user-select: none; 
         }
 
-        .user-info { position: absolute; top: 20px; right: 30px; font-weight: bold; color: var(--hi-blue-hover); font-size: 16px; background: white; padding: 8px 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid var(--hi-pink); z-index: 10; }
-        .container { max-width: 1200px; margin: 60px auto 0; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; z-index: 5; }
-        h1 { color: #1a365d; text-align: center; margin-bottom: 5px; }
+        /* 메인 컨테이너 (흰색 바탕 박스) */
+        .container { 
+            max-width: 1200px; 
+            margin: 40px auto 0; /* 위쪽 여백 조정 */
+            background: white; 
+            padding: 40px 30px 30px 30px; /* 위쪽 여백을 조금 더 주어 라벨과 겹치지 않게 함 */
+            border-radius: 10px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            position: relative; /* ★ 라벨의 기준점이 됨 */
+            z-index: 5; 
+        }
+
+        /* ★ 원무팀 라벨 디자인 (박스 안쪽 우측 상단 고정) */
+        .user-info { 
+            position: absolute; 
+            top: 15px; /* 박스 안쪽 위에서 25px */
+            right: 30px; /* 박스 안쪽 오른쪽에서 30px */
+            font-weight: bold; 
+            color: var(--hi-blue-hover); 
+            font-size: 15px; 
+            background: white; 
+            padding: 8px 15px; 
+            border-radius: 5px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            border-left: 4px solid var(--hi-pink); 
+            z-index: 10; 
+        }
+
+        /* 여기서부터 생략되었던 전체 디자인 코드 복구 */
+        h1 { color: #1a365d; text-align: center; margin-bottom: 5px; margin-top: 10px; }
         .subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 15px; }
         
         .step-box { border: 2px solid #e2e8f0; border-radius: 10px; padding: 25px; margin-bottom: 25px; background: #fff; }
@@ -39,15 +66,12 @@
         .checkbox-item:hover { background-color: #f0f9ff; border-radius: 5px; }
         input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--hi-blue); }
         
-        /* 공통 버튼 디자인 */
         .btn { padding: 12px 24px; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.2s; outline: none; }
-        .btn:disabled { background-color: #94a3b8 !class; cursor: not-allowed; opacity: 0.6; }
+        .btn:disabled { background-color: #94a3b8 !important; cursor: not-allowed; opacity: 0.6; }
 
-        /* ★ [Step 1] 불러오기 버튼 전용: HI 분홍 컬러 적용 */
         #loadBtn { background-color: var(--hi-pink); width: 100%; }
         #loadBtn:hover { background-color: var(--hi-pink-hover); }
 
-        /* [Step 2] 비교 검색 버튼 전용: HI 파란 컬러 적용 */
         #searchBtn { background-color: var(--hi-blue); width: 150px; }
         #searchBtn:hover { background-color: var(--hi-blue-hover); }
         
@@ -83,9 +107,9 @@
 </head>
 <body>
 
-<div class="user-info">🏥 한림대학교성심병원 원무팀</div>
-
 <div class="container">
+    <div class="user-info">🏥 한림대학교성심병원 원무팀</div>
+
     <h1>🏥 상급종합병원 비급여 통합 검색 및 비교 대시보드</h1>
     <div class="subtitle">필요한 병원만 선택하여 데이터를 다이렉트로 비교합니다. (그래프 위치 확인 기능 추가)</div>
     
@@ -124,7 +148,6 @@
 </div>
 
 <script>
-    // 우클릭 및 소스보기 방지 (배포용 보안)
     document.addEventListener('contextmenu', event => event.preventDefault()); 
     document.addEventListener('keydown', function(e) {
         if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) {
@@ -144,7 +167,7 @@
 
     let allData = []; 
     let selectedHospitals = [];
-    let myCharts = []; // 생성된 차트 객체들을 담을 배열 (새 검색 시 초기화용)
+    let myCharts = []; 
 
     window.onload = function() {
         const grid = document.getElementById('checkboxGrid');
@@ -180,7 +203,6 @@
         loading.style.display = "block";
         loadBtn.disabled = true;
         loadBtn.innerText = "데이터 호출 중...";
-        // 로딩 중일 때는 시스템 회색으로 바뀌므로 별도 색상 지정 안 함 ( disabled 스타일 적용됨)
 
         try {
             const fetchPromises = selectedHospitals.map(hosp => {
@@ -250,10 +272,9 @@
             datalist.innerHTML = optionsHtml;
 
             loading.style.display = "none";
-            // ★ 핵심 해결책: 로딩 완료 후 버튼을 다시 HI 분홍색으로 명시적으로 돌려줍니다.
             loadBtn.disabled = false;
             loadBtn.innerText = "데이터 갱신 완료!";
-            loadBtn.style.backgroundColor = "var(--hi-pink)"; // HI Pink
+            loadBtn.style.backgroundColor = "var(--hi-pink)"; 
             
             step2Box.classList.remove('disabled-step'); 
             searchInput.placeholder = `✅ 준비 완료! (검색 가능한 비급여 항목: ${uniqueItems.length}개)`;
@@ -264,24 +285,20 @@
             loading.style.display = "none";
             loadBtn.disabled = false;
             loadBtn.innerText = "다시 시도하기";
-            // 에러 시에도 기본 HI 분홍색으로 유지 (CSS 디폴트)
             loadBtn.style.backgroundColor = "var(--hi-pink)";
             errorLog.style.display = "block";
             errorLog.innerHTML = `❌ 에러: ${error.message}`;
         }
     }
 
-    // ★ 통합 검색 및 차트 그리기 함수
     function renderPivotTableAndChart() {
-        const keyword = document.getElementById('searchInput').value.trim().toLowerCase(); // 소문자로 통일
+        const keyword = document.getElementById('searchInput').value.trim().toLowerCase(); 
         const resultArea = document.getElementById('resultArea');
         if(!keyword) { alert("검색어를 입력하세요!"); return; }
 
-        // 이전 차트 객체들 초기화 (메모리 누수 방지)
         myCharts.forEach(chart => chart.destroy());
         myCharts = [];
 
-        // ★ 핵심 해결책: 처방명(itemName) 또는 EDI 코드(ediCode) 중 하나라도 포함되면 매칭
         const matchedItemNames = [...new Set(allData.filter(d => 
             d.itemName.toLowerCase().includes(keyword) || d.ediCode.toLowerCase().includes(keyword)
         ).map(d => d.itemName))].sort();
@@ -296,12 +313,10 @@
             const targetItem = matchedItemNames[i];
             const itemData = allData.filter(d => d.itemName === targetItem);
             
-            // 이 항목의 첫 번째 데이터에서 EDI 코드 가져오기 (표 제목 옆에 표시용)
             const matchedEdi = itemData[0]?.ediCode || "-";
 
             finalHtml += `<div class="item-title">📌 ${targetItem} <span class="edi-tag">EDI: ${matchedEdi}</span></div>`;
             
-            // [표 영역]
             finalHtml += `<div class="table-wrapper"><table>`;
             finalHtml += `<tr><th>구분 \\ 병원명</th>`;
             selectedHospitals.forEach(hosp => { finalHtml += `<th>${hosp}</th>`; });
@@ -317,7 +332,6 @@
             });
             finalHtml += `</tr></table></div>`;
 
-            // [차트 영역]
             finalHtml += `
                 <div class="chart-container">
                     <div class="chart-title">[ ${targetItem} ] 실시간 비용 비교 차트</div>
@@ -327,7 +341,6 @@
         }
         resultArea.innerHTML = finalHtml;
 
-        // 표 그리기 후 차트 데이터 생성 및 렌더링
         for (let i=0; i<matchedItemNames.length; i++) {
             const targetItem = matchedItemNames[i];
             const itemData = allData.filter(d => d.itemName === targetItem);
@@ -343,41 +356,38 @@
                 const priceNum = found ? Number(found.price) : 0;
                 prices.push(priceNum);
 
-                // ★ 우리 병원(한림대성심)만 HI Pink 컬러로 돋보이게 처리
                 if(hosp === "한림대학교성심병원") {
-                    backgroundColors.push('rgba(241, 92, 117, 0.7)'); // HI Pink (70% 투명도)
-                    borderColors.push('#F15C75'); // HI Pink
+                    backgroundColors.push('rgba(241, 92, 117, 0.7)'); 
+                    borderColors.push('#F15C75'); 
                 } else {
-                    backgroundColors.push('rgba(65, 182, 230, 0.5)'); // HI Blue (50% 투명도)
-                    borderColors.push('#41B6E6'); // HI Blue
+                    backgroundColors.push('rgba(65, 182, 230, 0.5)'); 
+                    borderColors.push('#41B6E6'); 
                 }
             });
 
-            // 차트 렌더링
             const ctx = document.getElementById(`chart-${i}`).getContext('2d');
             const newChart = new Chart(ctx, {
-                type: 'bar', // 막대그래프
+                type: 'bar', 
                 data: {
-                    labels: labels, // 병원 이름들
+                    labels: labels, 
                     datasets: [{
                         label: '비용(원)',
-                        data: prices, // 금액 데이터
+                        data: prices, 
                         backgroundColor: backgroundColors,
                         borderColor: borderColors,
                         borderWidth: 2,
-                        borderRadius: 5 // 막대 끝부분 둥글게
+                        borderRadius: 5 
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { display: false } // 상단 범례 숨김 (병원별 색깔이 다르므로 필요 없음)
+                        legend: { display: false } 
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                // Y축 금액 포맷 (천단위 콤마)
                                 callback: function(value, index, values) {
                                     return value.toLocaleString() + '원';
                                 }
@@ -386,7 +396,7 @@
                     }
                 }
             });
-            myCharts.push(newChart); // 차트 객체 저장
+            myCharts.push(newChart); 
         }
     }
 </script>
