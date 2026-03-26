@@ -13,7 +13,6 @@
             --hi-pink-hover: #D14A5F;
         }
 
-        /* 텍스트 드래그(선택) 방지 */
         body { 
             font-family: 'Malgun Gothic', sans-serif; 
             background-color: #f0f2f5; 
@@ -53,8 +52,23 @@
         }
 
         h1 { color: #1a365d; text-align: center; margin-bottom: 5px; margin-top: 10px; }
-        .subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 15px; }
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 15px; }
         
+        /* ★ 신규 추가: 안내사항(공지) 박스 디자인 */
+        .notice-box {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .notice-box strong { color: #1e293b; font-size: 15px; display: block; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
+        .notice-box ul { margin: 0; padding-left: 20px; }
+        .notice-box li { margin-bottom: 8px; }
+
         .step-box { border: 2px solid #e2e8f0; border-radius: 10px; padding: 25px; margin-bottom: 25px; background: #fff; }
         .step-title { color: var(--hi-blue-hover); font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--hi-blue); padding-bottom: 10px; }
         
@@ -77,7 +91,7 @@
         input[type="text"]:focus { border-color: var(--hi-blue); }
         
         #loading { text-align: center; background-color: #e0f2fe; color: var(--hi-blue-hover); padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; display: none; }
-        #error-log { display: none; background-color: #ffe4e6; color: var(--hi-pink); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; font-weight: bold; }
+        #error-log { display: none; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 15px; text-align: center; font-weight: bold; line-height: 1.5; }
         
         .table-wrapper { overflow-x: auto; white-space: nowrap; margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; }
@@ -108,7 +122,16 @@
     <div class="user-info">🏥 한림대학교성심병원 원무팀</div>
 
     <h1>🏥 상급종합병원 비급여 통합 검색 및 비교 대시보드</h1>
-    <div class="subtitle">필요한 병원만 선택하여 데이터를 다이렉트로 비교합니다. (그래프 위치 확인 기능 추가)</div>
+    <div class="subtitle">필요한 병원만 선택하여 데이터를 다이렉트로 비교합니다. (인터넷망 접속 필수)</div>
+
+    <div class="notice-box">
+        <strong>📢 이용 전 안내사항 (필독)</strong>
+        <ul>
+            <li><strong>⏳ 조회 소요 시간:</strong> 심평원 공공데이터 서버의 물리적 처리 속도 및 트래픽으로 인해 <b>병원 1개당 약 1분 내외</b>의 데이터 수집 시간이 소요될 수 있습니다.</li>
+            <li><strong>🛑 데이터 에러:</strong> 진행 중 에러 발생 시, 해당 병원의 데이터가 미등록 상태이거나, 대시보드의 당일 심평원 무료 조회 한도를 모두 소진한 경우입니다. 한도 소진 시 자정(밤 12시) 이후 초기화됩니다.</li>
+            <li><strong>🔌 사이트 접속/통신 실패:</strong> 데이터 로딩 자체가 진행되지 않거나 무한 대기 상태일 경우, 1) 심평원 서버 자체의 장애 및 정기 점검 중이거나, 2) 하단의 <b>크롬 'Allow CORS' 확장앱</b>이 꺼져있는 경우입니다.</li>
+        </ul>
+    </div>
     
     <div class="step-box">
         <div class="step-title">Step 1. 비교할 병원 선택 (원하는 만큼 체크하세요)</div>
@@ -116,7 +139,7 @@
         <button class="btn" id="loadBtn" onclick="loadSelectedHospitals()">선택한 병원 데이터 실시간 불러오기</button>
     </div>
 
-    <div id="loading">🚀 선택하신 병원들의 데이터를 심평원에서 가져오고 있습니다...</div>
+    <div id="loading">🚀 선택하신 병원들의 데이터를 심평원에서 안전하게 순차적으로 가져오고 있습니다...</div>
     <div id="error-log"></div>
     
     <div class="step-box disabled-step" id="step2Box">
@@ -202,22 +225,23 @@
         try {
             const results = [];
             
-            // ★ 핵심 복구: 오직 심평원 서버와 다이렉트 1:1 통신을 합니다. (프록시 제거)
-            // ★ 에러 방지(줄 세우기): 대신 16개를 동시에 쏘지 않고, 한 번에 하나씩 0.2초 간격으로 호출합니다.
             for (let i = 0; i < selectedHospitals.length; i++) {
                 const hosp = selectedHospitals[i];
-                loadBtn.innerText = `[${i+1}/${selectedHospitals.length}] ${hosp} 데이터 다이렉트 통신 중...`;
+                loadBtn.innerText = `[${i+1}/${selectedHospitals.length}] ${hosp} 데이터 연동 중... (혼잡시간대 1분 이상 소요)`;
                 
-                // 프록시 없는 순수 심평원 다이렉트 주소! (크롬 확장앱 필수)
                 const targetUrl = `https://apis.data.go.kr/B551182/nonPaymentDamtInfoService/getNonPaymentItemHospDtlList?ServiceKey=${API_KEY}&pageNo=1&numOfRows=1000&yadmNm=${encodeURIComponent(hosp)}`;
                 
-                const res = await fetch(targetUrl);
-                if (!res.ok) throw new Error(`${hosp} 네트워크 통신 실패`);
+                try {
+                    const res = await fetch(targetUrl);
+                    if (!res.ok) throw new Error("NETWORK_DOWN");
+                    
+                    const xmlText = await res.text();
+                    results.push(xmlText);
+                } catch(fetchError) {
+                    throw new Error("NETWORK_DOWN");
+                }
                 
-                const xmlText = await res.text();
-                results.push(xmlText);
-                
-                // 심평원 서버가 공격으로 오해하지 않도록 0.2초 휴식
+                // 서버 안정성을 위해 0.2초 휴식
                 await new Promise(resolve => setTimeout(resolve, 200));
             }
 
@@ -228,7 +252,7 @@
                 const xmlDoc = parser.parseFromString(xmlText, "text/xml");
                 
                 if(xmlDoc.getElementsByTagName("returnReasonCode")[0]?.textContent === "22" || xmlText.includes("LIMITED")) {
-                    throw new Error("오늘 허용된 심평원 API 호출 횟수를 모두 소진했습니다. 내일 다시 시도해주세요.");
+                    throw new Error("LIMIT_EXCEEDED");
                 }
 
                 const items = xmlDoc.getElementsByTagName("item");
@@ -270,7 +294,7 @@
                 }
             });
 
-            if(!hasValidData) throw new Error("데이터가 비어있습니다. 심평원 API 서버 오류입니다.");
+            if(!hasValidData) throw new Error("EMPTY_DATA");
 
             const uniqueItems = [...new Set(allData.map(d => d.itemName))].filter(name => name !== "").sort();
 
@@ -293,8 +317,26 @@
             loadBtn.disabled = false;
             loadBtn.innerText = "다시 시도하기";
             loadBtn.style.backgroundColor = "var(--hi-pink)";
+            
             errorLog.style.display = "block";
-            errorLog.innerHTML = `❌ 에러: ${error.message}`;
+            
+            if (error.message === "NETWORK_DOWN") {
+                errorLog.style.backgroundColor = "#fee2e2"; 
+                errorLog.style.color = "#b91c1c"; 
+                errorLog.innerHTML = `🚨 <b>[서버 접속/통신 실패]</b><br>현재 심평원 공공데이터 서버가 점검 중이거나 다운되었습니다.<br><span style="font-size:13px; color:#ef4444;">(또는 하단의 크롬 'Allow CORS' 확장앱이 꺼져있는지 확인해주세요.)</span>`;
+            } else if (error.message === "LIMIT_EXCEEDED") {
+                errorLog.style.backgroundColor = "#fef3c7"; 
+                errorLog.style.color = "#d97706"; 
+                errorLog.innerHTML = `🛑 <b>[일일 호출 한도 초과]</b><br>오늘 허용된 심평원 API 무료 조회 건수(1,000건)를 모두 사용했습니다.<br><span style="font-size:13px; color:#d97706;">12시(자정) 이후에 다시 시도해 주세요.</span>`;
+            } else if (error.message === "EMPTY_DATA") {
+                errorLog.style.backgroundColor = "#f3f4f6"; 
+                errorLog.style.color = "#4b5563"; 
+                errorLog.innerHTML = `⚠️ <b>[조회 데이터 없음]</b><br>선택하신 병원의 비급여 데이터가 심평원 서버에 존재하지 않습니다.`;
+            } else {
+                errorLog.style.backgroundColor = "#ffe4e6";
+                errorLog.style.color = "var(--hi-pink)";
+                errorLog.innerHTML = `❌ 에러: 알 수 없는 통신 오류가 발생했습니다.`;
+            }
         }
     }
 
