@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>상급종합병원 비급여 선택형 대시보드</title>
+    <style>
+        /* 한림대학교의료원 HI Pantone Color */
+        :root {
+            --hi-blue: #41B6E6; 
+            --hi-blue-hover: #2A9DD1;
+            --hi-pink: #F15C75; 
+        }
+
+        /* 텍스트 드래그(선택) 방지 */
+        body { 
+            font-family: 'Malgun Gothic', sans-serif; 
+            background-color: #f0f2f5; 
+            padding: 20px; 
+            margin: 0; 
+            position: relative; 
+            user-select: none; 
+            -webkit-user-select: none; 
+            -moz-user-select: none; 
+            -ms-user-select: none; 
+        }
+
+        .user-info { position: absolute; top: 20px; right: 30px; font-weight: bold; color: var(--hi-blue-hover); font-size: 16px; background: white; padding: 8px 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid var(--hi-pink); z-index: 10; }
+        .container { max-width: 1200px; margin: 60px auto 0; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; z-index: 5; }
+        h1 { color: #1a365d; text-align: center; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 15px; }
+        
+        .step-box { border: 2px solid #e2e8f0; border-radius: 10px; padding: 25px; margin-bottom: 25px; background: #fff; }
+        .step-title { color: var(--hi-blue-hover); font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--hi-blue); padding-bottom: 10px; }
+        
+        .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; padding: 5px; }
+        .checkbox-item:hover { background-color: #f0f9ff; border-radius: 5px; }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--hi-blue); }
+        
+        .btn-primary { padding: 12px 24px; background-color: var(--hi-blue); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
+        .btn-primary:hover { background-color: var(--hi-blue-hover); }
+        .btn-primary:disabled { background-color: #94a3b8; cursor: not-allowed; }
+        
+        .search-box { display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; padding: 15px; font-size: 16px; border: 2px solid #cbd5e1; border-radius: 8px; outline: none; }
+        input[type="text"]:focus { border-color: var(--hi-blue); }
+        
+        #loading { text-align: center; background-color: #e0f2fe; color: var(--hi-blue-hover); padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; display: none; }
+        #error-log { display: none; background-color: #ffe4e6; color: var(--hi-pink); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; font-weight: bold; }
+        
+        .table-wrapper { overflow-x: auto; white-space: nowrap; margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; text-align: center; min-width: 140px; }
+        th { background-color: #f8fafc; color: #334155; font-weight: bold; position: sticky; top: 0; }
+        td:first-child, th:first-child { position: sticky; left: 0; background-color: #f1f5f9; font-weight: bold; z-index: 1; border-right: 2px solid #cbd5e1; }
+        
+        .item-title { color: #0f172a; font-size: 20px; border-left: 5px solid var(--hi-blue); padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-weight: bold; }
+        
+        .row-price { font-weight: bold; color: var(--hi-pink); font-size: 17px; }
+        .row-code { color: #475569; font-family: monospace; font-size: 14px; }
+        .row-date { color: #64748b; font-size: 14px; }
+        
+        .disabled-step { opacity: 0.4; pointer-events: none; }
+
+        /* 하단 푸터(Footer) 영역 디자인 */
+        .footer { text-align: center; margin-top: 50px; padding-top: 25px; border-top: 2px dashed #e2e8f0; color: #64748b; font-size: 14px; line-height: 1.8; }
+        .cors-notice { color: var(--hi-pink); font-weight: bold; margin-bottom: 15px; font-size: 15px; background: #fff1f2; padding: 15px; border-radius: 8px; display: inline-block; border: 1px solid #fecdd3; }
+        .cors-notice a { color: var(--hi-blue); text-decoration: underline; font-weight: 900; }
+        .copyright { font-weight: bold; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏥 상급종합병원 비급여 맞춤형 대시보드</h1>
+    <div class="subtitle">필요한 병원만 선택하여 데이터를 다이렉트로 비교합니다.</div>
+    
+    <div class="step-box">
+        <div class="step-title">Step 1. 비교할 병원 선택 (원하는 만큼 체크하세요)</div>
+        <div class="checkbox-grid" id="checkboxGrid"></div>
+        <button class="btn-primary" id="loadBtn" onclick="loadSelectedHospitals()">선택한 병원 데이터 실시간 불러오기</button>
+    </div>
+
+    <div id="loading">🚀 선택하신 병원들의 데이터를 심평원에서 가져오고 있습니다... (잠시만 대기)</div>
+    <div id="error-log"></div>
+    
+    <div class="step-box disabled-step" id="step2Box">
+        <div class="step-title">Step 2. 비급여 항목 검색 및 단가 비교</div>
+        <div class="search-box">
+            <input type="text" id="searchInput" list="itemNames" placeholder="데이터 로딩 완료 후 검색 가능합니다.">
+            <datalist id="itemNames"></datalist>
+            <button class="btn-primary" style="width:150px;" onclick="renderPivotTable()">비교 검색</button>
+        </div>
+
+        <div id="resultArea">
+            <div style="text-align:center; padding:40px; color:#94a3b8;">
+                Step 1에서 데이터를 불러온 후 검색해 주세요.
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="cors-notice">
+            🚨 데이터가 조회되지 않거나 무한 로딩이 발생하나요?<br>
+            원내 방화벽 우회를 위해 반드시 <a href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf" target="_blank">크롬 'Allow CORS' 확장 프로그램</a>을 설치하고 아이콘을 클릭해 활성화(ON)해주세요.
+        </div>
+        <div class="copyright">Copyright © 2026. 한림대학교성심병원 원무팀 김영선 대리. All rights reserved.</div>
+    </div>
+</div>
+
+<script>
+    // 우클릭 및 소스보기 방지 (배포용 보안)
+    document.addEventListener('contextmenu', event => event.preventDefault()); 
+    document.addEventListener('keydown', function(e) {
+        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) {
+            e.preventDefault();
+        }
+    });
+    console.log("%c⚠️ 경고: 본 프로그램의 저작권 및 소유권은 '한림대학교성심병원 원무팀 김영선 대리'에게 있습니다. 무단 복제 및 상업적 이용을 엄격히 금합니다.", "color: #F15C75; font-size: 16px; font-weight: bold; background: #fff; padding: 10px; border: 2px solid #F15C75;");
+
+    const API_KEY = "0412d9d9b5df0a9504c7e3712efa9c123d1639149c78fac71fd43121f7227b23"; 
+    
+    const hospitalList = [
+        "한림대학교성심병원", "서울대학교병원", "삼성서울병원", "서울아산병원", 
+        "연세대학교의과대학세브란스병원", "가톨릭대학교서울성모병원", "고려대학교의과대학부속병원(안암)", "고려대학교의과대학부속구로병원",
+        "경희대학교병원", "한양대학교병원", "중앙대학교병원", "이화여자대학교의과대학부속목동병원",
+        "강북삼성병원", "아주대학교병원", "가천대학교길병원", "분당서울대학교병원"
+    ];
+
+    let allData = []; 
+    let selectedHospitals = [];
+
+    window.onload = function() {
+        const grid = document.getElementById('checkboxGrid');
+        hospitalList.forEach(hosp => {
+            const isChecked = ["한림대학교성심병원", "서울대학교병원", "삼성서울병원", "서울아산병원", "연세대학교의과대학세브란스병원"].includes(hosp) ? "checked" : "";
+            grid.innerHTML += `
+                <label class="checkbox-item">
+                    <input type="checkbox" name="hospCb" value="${hosp}" ${isChecked}>
+                    ${hosp}
+                </label>
+            `;
+        });
+    }
+
+    async function loadSelectedHospitals() {
+        const checkboxes = document.querySelectorAll('input[name="hospCb"]:checked');
+        selectedHospitals = Array.from(checkboxes).map(cb => cb.value);
+
+        if(selectedHospitals.length === 0) {
+            alert("최소 1개 이상의 병원을 선택해 주세요!");
+            return;
+        }
+
+        const loading = document.getElementById('loading');
+        const errorLog = document.getElementById('error-log');
+        const loadBtn = document.getElementById('loadBtn');
+        const step2Box = document.getElementById('step2Box');
+        const searchInput = document.getElementById('searchInput');
+        const datalist = document.getElementById('itemNames');
+        
+        allData = [];
+        errorLog.style.display = "none";
+        loading.style.display = "block";
+        loadBtn.disabled = true;
+        loadBtn.innerText = "데이터 호출 중...";
+
+        try {
+            const fetchPromises = selectedHospitals.map(hosp => {
+                const targetUrl = `https://apis.data.go.kr/B551182/nonPaymentDamtInfoService/getNonPaymentItemHospDtlList?ServiceKey=${API_KEY}&pageNo=1&numOfRows=1000&yadmNm=${encodeURIComponent(hosp)}`;
+                return fetch(targetUrl).then(res => {
+                    if (!res.ok) throw new Error("네트워크 통신 실패");
+                    return res.text();
+                });
+            });
+
+            const results = await Promise.all(fetchPromises);
+            let hasValidData = false;
+
+            results.forEach(xmlText => {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+                
+                if(xmlDoc.getElementsByTagName("returnReasonCode")[0]?.textContent === "22" || xmlText.includes("LIMITED")) {
+                    throw new Error("오늘 허용된 API 호출 횟수를 모두 소진했습니다.");
+                }
+
+                const items = xmlDoc.getElementsByTagName("item");
+                if(items.length > 0) hasValidData = true;
+
+                for(let i=0; i<items.length; i++) {
+                    const rawHospName = items[i].getElementsByTagName("yadmNm")[0]?.textContent || "";
+                    let matchedHosp = null;
+                    for (let t of selectedHospitals) {
+                        if (rawHospName.includes(t) || t.includes(rawHospName)) {
+                            matchedHosp = t; break;
+                        }
+                    }
+
+                    if (matchedHosp) {
+                        const itemName = items[i].getElementsByTagName("npayKorNm")[0]?.textContent 
+                                      || items[i].getElementsByTagName("npayCdNm")[0]?.textContent 
+                                      || items[i].getElementsByTagName("npayNm")[0]?.textContent 
+                                      || items[i].getElementsByTagName("itemNm")[0]?.textContent 
+                                      || "";
+
+                        const price = items[i].getElementsByTagName("curAmt")[0]?.textContent || items[i].getElementsByTagName("prcMax")[0]?.textContent || "0";
+                        const ediCode = items[i].getElementsByTagName("npayCd")[0]?.textContent || "-";
+                        const rawDate = items[i].getElementsByTagName("adtFrDd")[0]?.textContent || "-";
+                        
+                        let formattedDate = rawDate;
+                        if(rawDate.length === 8) {
+                            formattedDate = `${rawDate.slice(0,4)}-${rawDate.slice(4,6)}-${rawDate.slice(6,8)}`;
+                        }
+
+                        allData.push({
+                            hospName: matchedHosp,
+                            itemName: itemName.trim(),
+                            price: price,
+                            ediCode: ediCode,
+                            date: formattedDate
+                        });
+                    }
+                }
+            });
+
+            if(!hasValidData) throw new Error("데이터가 비어있습니다. API 오류입니다.");
+
+            const uniqueItems = [...new Set(allData.map(d => d.itemName))].filter(name => name !== "").sort();
+
+            let optionsHtml = "";
+            uniqueItems.forEach(item => { optionsHtml += `<option value="${item}">`; });
+            datalist.innerHTML = optionsHtml;
+
+            loading.style.display = "none";
+            loadBtn.innerText = "데이터 갱신 완료!";
+            loadBtn.style.backgroundColor = "var(--hi-blue)"; 
+            loadBtn.disabled = false;
+            
+            step2Box.classList.remove('disabled-step'); 
+            searchInput.placeholder = `✅ 준비 완료! (검색 가능한 비급여 항목: ${uniqueItems.length}개)`;
+            searchInput.focus();
+
+        } catch (error) {
+            console.error(error);
+            loading.style.display = "none";
+            loadBtn.disabled = false;
+            loadBtn.innerText = "다시 시도하기";
+            errorLog.style.display = "block";
+            errorLog.innerHTML = `❌ 에러: ${error.message}`;
+        }
+    }
+
+    function renderPivotTable() {
+        const keyword = document.getElementById('searchInput').value.trim();
+        const resultArea = document.getElementById('resultArea');
+        if(!keyword) { alert("검색어를 입력하세요!"); return; }
+
+        const matchedItemNames = [...new Set(allData.filter(d => d.itemName.includes(keyword)).map(d => d.itemName))].sort();
+
+        if(matchedItemNames.length === 0) {
+            resultArea.innerHTML = `<div style="text-align:center; padding:50px; color:var(--hi-pink); font-size:18px;">"${keyword}" 검색 결과가 없습니다.</div>`;
+            return;
+        }
+
+        let finalHtml = "";
+        for (const targetItem of matchedItemNames) {
+            const itemData = allData.filter(d => d.itemName === targetItem);
+            
+            finalHtml += `<div class="item-title">📌 ${targetItem}</div>`;
+            finalHtml += `<div class="table-wrapper"><table>`;
+            
+            finalHtml += `<tr><th>구분 \\ 병원명</th>`;
+            selectedHospitals.forEach(hosp => { finalHtml += `<th>${hosp}</th>`; });
+            finalHtml += `</tr>`;
+            
+            finalHtml += `<tr><td>비용(금액)</td>`;
+            selectedHospitals.forEach(hosp => {
+                const found = itemData.find(d => d.hospName === hosp);
+                finalHtml += `<td class="row-price">${found && found.price !== "0" ? Number(found.price).toLocaleString() + '원' : '-'}</td>`;
+            });
+            finalHtml += `</tr>`;
+
+            finalHtml += `<tr><td>EDI 코드</td>`;
+            selectedHospitals.forEach(hosp => {
+                const found = itemData.find(d => d.hospName === hosp);
+                finalHtml += `<td class="row-code">${found ? found.ediCode : '-'}</td>`;
+            });
+            finalHtml += `</tr>`;
+
+            finalHtml += `<tr><td>최종 등록일자</td>`;
+            selectedHospitals.forEach(hosp => {
+                const found = itemData.find(d => d.hospName === hosp);
+                finalHtml += `<td class="row-date">${found ? found.date : '-'}</td>`;
+            });
+            finalHtml += `</tr>`;
+
+            finalHtml += `</table></div>`;
+        }
+        resultArea.innerHTML = finalHtml;
+    }
+</script>
+
+</body>
+</html>
