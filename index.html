@@ -13,7 +13,6 @@
             --hi-pink-hover: #D14A5F;
         }
 
-        /* 텍스트 드래그(선택) 방지 */
         body { 
             font-family: 'Malgun Gothic', sans-serif; 
             background-color: #f0f2f5; 
@@ -52,14 +51,21 @@
             z-index: 10; 
         }
 
-        h1 { color: #1a365d; text-align: center; margin-bottom: 5px; margin-top: 10px; }
-        .subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 15px; }
+        /* 모바일 화면 대응을 위해 글씨 크기 약간 유연하게 조정 */
+        h1 { color: #1a365d; text-align: center; margin-bottom: 5px; margin-top: 10px; font-size: 24px; }
+        @media (max-width: 768px) { h1 { font-size: 20px; } .user-info { position: static; text-align: right; margin-bottom: 15px; float: right; } .container { padding: 20px 15px; margin-top: 20px; } }
+
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; }
         
         .step-box { border: 2px solid #e2e8f0; border-radius: 10px; padding: 25px; margin-bottom: 25px; background: #fff; }
+        @media (max-width: 768px) { .step-box { padding: 15px; } }
+        
         .step-title { color: var(--hi-blue-hover); font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--hi-blue); padding-bottom: 10px; }
         
         .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; padding: 5px; }
+        @media (max-width: 768px) { .checkbox-grid { grid-template-columns: repeat(1, 1fr); gap: 10px; } }
+        
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px; }
         .checkbox-item:hover { background-color: #f0f9ff; border-radius: 5px; }
         input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--hi-blue); }
         
@@ -71,12 +77,348 @@
 
         #searchBtn { background-color: var(--hi-blue); width: 150px; }
         #searchBtn:hover { background-color: var(--hi-blue-hover); }
+        @media (max-width: 768px) { #searchBtn { width: 100%; margin-top: 10px; } .search-box { flex-direction: column; } }
         
         .search-box { display: flex; gap: 10px; }
-        input[type="text"] { flex: 1; padding: 15px; font-size: 16px; border: 2px solid #cbd5e1; border-radius: 8px; outline: none; }
+        input[type="text"] { flex: 1; padding: 15px; font-size: 16px; border: 2px solid #cbd5e1; border-radius: 8px; outline: none; width: 100%; box-sizing: border-box; }
         input[type="text"]:focus { border-color: var(--hi-blue); }
         
         #loading { text-align: center; background-color: #e0f2fe; color: var(--hi-blue-hover); padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; display: none; }
         #error-log { display: none; background-color: #ffe4e6; color: var(--hi-pink); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; font-weight: bold; }
         
-        .table-wrapper { overflow-x: auto;
+        .table-wrapper { overflow-x: auto; white-space: nowrap; margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; text-align: center; min-width: 140px; }
+        th { background-color: #f8fafc; color: #334155; font-weight: bold; position: sticky; top: 0; }
+        td:first-child, th:first-child { position: sticky; left: 0; background-color: #f1f5f9; font-weight: bold; z-index: 1; border-right: 2px solid #cbd5e1; }
+        
+        .item-title { color: #0f172a; font-size: 18px; border-left: 5px solid var(--hi-blue); padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .edi-tag { background-color: #f1f5f9; color: #475569; font-family: monospace; font-size: 13px; padding: 3px 8px; border-radius: 4px; border: 1px solid #e2e8f0; }
+
+        .row-price { font-weight: bold; color: var(--hi-pink); font-size: 16px; }
+        .row-date { color: #64748b; font-size: 13px; }
+        
+        .disabled-step { opacity: 0.4; pointer-events: none; }
+
+        .chart-container { width: 100%; margin-top: 30px; margin-bottom: 50px; padding: 20px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); box-sizing: border-box; }
+        .chart-title { text-align: center; color: #334155; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+
+        .footer { text-align: center; margin-top: 50px; padding-top: 25px; border-top: 2px dashed #e2e8f0; color: #64748b; font-size: 13px; line-height: 1.8; clear: both; }
+        .success-notice { color: #059669; font-weight: bold; margin-bottom: 15px; font-size: 14px; background: #d1fae5; padding: 15px; border-radius: 8px; display: inline-block; border: 1px solid #a7f3d0; }
+        .copyright { font-weight: bold; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="user-info">🏥 한림대학교성심병원 원무팀</div>
+
+    <h1>🏥 상급종합병원 비급여 통합 검색 대시보드</h1>
+    <div class="subtitle">모바일/PC 언제 어디서나 프로그램 설치 없이 즉시 조회됩니다.</div>
+    
+    <div class="step-box">
+        <div class="step-title">Step 1. 비교할 병원 선택 (원하는 만큼 체크하세요)</div>
+        <div class="checkbox-grid" id="checkboxGrid"></div>
+        <button class="btn" id="loadBtn" onclick="loadSelectedHospitals()">선택한 병원 데이터 실시간 불러오기</button>
+    </div>
+
+    <div id="loading">🚀 선택하신 병원들의 데이터를 가져오는 중입니다...</div>
+    <div id="error-log"></div>
+    
+    <div class="step-box disabled-step" id="step2Box">
+        <div class="step-title">Step 2. 비급여 항목 통합 검색 및 단가 비교</div>
+        <div class="subtitle" style="margin-bottom:15px; text-align:left;">처방명(예: 다빈치) 또는 EDI 코드(예: O0123)를 입력해 주세요.</div>
+        <div class="search-box">
+            <input type="text" id="searchInput" list="itemNames" placeholder="데이터 로딩 완료 후 검색 가능합니다.">
+            <datalist id="itemNames"></datalist>
+            <button class="btn" id="searchBtn" onclick="renderPivotTableAndChart()">비교 검색</button>
+        </div>
+
+        <div id="resultArea">
+            <div style="text-align:center; padding:40px; color:#94a3b8;">
+                Step 1에서 데이터를 불러온 후 검색해 주세요.
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="success-notice">
+            ✨ 스마트폰 접속 지원 업데이트 완료 (보안 확장앱 불필요)
+        </div><br>
+        <div class="copyright">Copyright © 2026. 한림대학교성심병원 원무팀 김영선 대리. All rights reserved.</div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('contextmenu', event => event.preventDefault()); 
+    document.addEventListener('keydown', function(e) {
+        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) {
+            e.preventDefault();
+        }
+    });
+
+    const API_KEY = "0412d9d9b5df0a9504c7e3712efa9c123d1639149c78fac71fd43121f7227b23"; 
+    
+    const hospitalList = [
+        "한림대학교성심병원", "서울대학교병원", "삼성서울병원", "서울아산병원", 
+        "연세대학교의과대학세브란스병원", "가톨릭대학교서울성모병원", "고려대학교의과대학부속병원(안암)", "고려대학교의과대학부속구로병원",
+        "경희대학교병원", "한양대학교병원", "중앙대학교병원", "이화여자대학교의과대학부속목동병원",
+        "강북삼성병원", "아주대학교병원", "가천대학교길병원", "분당서울대학교병원"
+    ];
+
+    let allData = []; 
+    let selectedHospitals = [];
+    let myCharts = []; 
+
+    window.onload = function() {
+        const grid = document.getElementById('checkboxGrid');
+        hospitalList.forEach(hosp => {
+            const isChecked = ["한림대학교성심병원", "서울대학교병원", "삼성서울병원", "서울아산병원", "연세대학교의과대학세브란스병원"].includes(hosp) ? "checked" : "";
+            grid.innerHTML += `
+                <label class="checkbox-item">
+                    <input type="checkbox" name="hospCb" value="${hosp}" ${isChecked}>
+                    ${hosp}
+                </label>
+            `;
+        });
+    }
+
+    async function loadSelectedHospitals() {
+        const checkboxes = document.querySelectorAll('input[name="hospCb"]:checked');
+        selectedHospitals = Array.from(checkboxes).map(cb => cb.value);
+
+        if(selectedHospitals.length === 0) {
+            alert("최소 1개 이상의 병원을 선택해 주세요!");
+            return;
+        }
+
+        const loading = document.getElementById('loading');
+        const errorLog = document.getElementById('error-log');
+        const loadBtn = document.getElementById('loadBtn');
+        const step2Box = document.getElementById('step2Box');
+        const searchInput = document.getElementById('searchInput');
+        const datalist = document.getElementById('itemNames');
+        
+        allData = [];
+        errorLog.style.display = "none";
+        loading.style.display = "block";
+        loadBtn.disabled = true;
+
+        try {
+            const results = [];
+            
+            // ★ 핵심 해결책: 모바일 사파리/크롬에서도 뚫리도록 '가벼운 우회 정거장'을 탑재합니다.
+            for (let i = 0; i < selectedHospitals.length; i++) {
+                const hosp = selectedHospitals[i];
+                loadBtn.innerText = `[${i+1}/${selectedHospitals.length}] ${hosp} 데이터 연동 중...`;
+                
+                // 원본 심평원 주소
+                const rawUrl = `https://apis.data.go.kr/B551182/nonPaymentDamtInfoService/getNonPaymentItemHospDtlList?ServiceKey=${API_KEY}&pageNo=1&numOfRows=1000&yadmNm=${encodeURIComponent(hosp)}`;
+                
+                // 프록시(우회) 주소로 감싸서 던집니다. (이제 확장앱 없이도 모바일에서 통과됩니다!)
+                const targetUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`;
+                
+                const res = await fetch(targetUrl);
+                if (!res.ok) throw new Error(`${hosp} 통신 장애`);
+                
+                const xmlText = await res.text();
+                results.push(xmlText);
+                
+                // 서버 안정성을 위해 0.2초 휴식
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            let hasValidData = false;
+
+            results.forEach(xmlText => {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+                
+                if(xmlDoc.getElementsByTagName("returnReasonCode")[0]?.textContent === "22" || xmlText.includes("LIMITED")) {
+                    throw new Error("오늘 허용된 API 호출 횟수(트래픽)를 모두 소진했습니다.");
+                }
+
+                const items = xmlDoc.getElementsByTagName("item");
+                if(items.length > 0) hasValidData = true;
+
+                for(let i=0; i<items.length; i++) {
+                    const rawHospName = items[i].getElementsByTagName("yadmNm")[0]?.textContent || "";
+                    let matchedHosp = null;
+                    for (let t of selectedHospitals) {
+                        if (rawHospName.includes(t) || t.includes(rawHospName)) {
+                            matchedHosp = t; break;
+                        }
+                    }
+
+                    if (matchedHosp) {
+                        const itemName = items[i].getElementsByTagName("npayKorNm")[0]?.textContent 
+                                      || items[i].getElementsByTagName("npayCdNm")[0]?.textContent 
+                                      || items[i].getElementsByTagName("npayNm")[0]?.textContent 
+                                      || items[i].getElementsByTagName("itemNm")[0]?.textContent 
+                                      || "";
+
+                        const price = items[i].getElementsByTagName("curAmt")[0]?.textContent || items[i].getElementsByTagName("prcMax")[0]?.textContent || "0";
+                        const ediCode = items[i].getElementsByTagName("npayCd")[0]?.textContent || "-";
+                        const rawDate = items[i].getElementsByTagName("adtFrDd")[0]?.textContent || "-";
+                        
+                        let formattedDate = rawDate;
+                        if(rawDate.length === 8) {
+                            formattedDate = `${rawDate.slice(0,4)}-${rawDate.slice(4,6)}-${rawDate.slice(6,8)}`;
+                        }
+
+                        allData.push({
+                            hospName: matchedHosp,
+                            itemName: itemName.trim(),
+                            price: price,
+                            ediCode: ediCode,
+                            date: formattedDate
+                        });
+                    }
+                }
+            });
+
+            if(!hasValidData) throw new Error("데이터가 비어있습니다. API 오류입니다.");
+
+            const uniqueItems = [...new Set(allData.map(d => d.itemName))].filter(name => name !== "").sort();
+
+            let optionsHtml = "";
+            uniqueItems.forEach(item => { optionsHtml += `<option value="${item}">`; });
+            datalist.innerHTML = optionsHtml;
+
+            loading.style.display = "none";
+            loadBtn.disabled = false;
+            loadBtn.innerText = "데이터 갱신 완료!";
+            loadBtn.style.backgroundColor = "var(--hi-pink)"; 
+            
+            step2Box.classList.remove('disabled-step'); 
+            searchInput.placeholder = `✅ 준비 완료! (검색 가능한 비급여 항목: ${uniqueItems.length}개)`;
+            
+            // 모바일에서는 키보드가 팝업되어 화면을 가릴 수 있으므로 자동 포커스 제외 권장
+            if(window.innerWidth > 768) {
+                searchInput.focus();
+            }
+
+        } catch (error) {
+            console.error(error);
+            loading.style.display = "none";
+            loadBtn.disabled = false;
+            loadBtn.innerText = "다시 시도하기";
+            loadBtn.style.backgroundColor = "var(--hi-pink)";
+            errorLog.style.display = "block";
+            errorLog.innerHTML = `❌ 에러: ${error.message}`;
+        }
+    }
+
+    function renderPivotTableAndChart() {
+        const keyword = document.getElementById('searchInput').value.trim().toLowerCase(); 
+        const resultArea = document.getElementById('resultArea');
+        if(!keyword) { alert("검색어를 입력하세요!"); return; }
+
+        myCharts.forEach(chart => chart.destroy());
+        myCharts = [];
+
+        const matchedItemNames = [...new Set(allData.filter(d => 
+            d.itemName.toLowerCase().includes(keyword) || d.ediCode.toLowerCase().includes(keyword)
+        ).map(d => d.itemName))].sort();
+
+        if(matchedItemNames.length === 0) {
+            resultArea.innerHTML = `<div style="text-align:center; padding:50px; color:var(--hi-pink); font-size:18px;">"${keyword}" 검색 결과가 없습니다.</div>`;
+            return;
+        }
+
+        let finalHtml = "";
+        for (let i=0; i<matchedItemNames.length; i++) {
+            const targetItem = matchedItemNames[i];
+            const itemData = allData.filter(d => d.itemName === targetItem);
+            
+            const matchedEdi = itemData[0]?.ediCode || "-";
+
+            finalHtml += `<div class="item-title">📌 ${targetItem} <span class="edi-tag">EDI: ${matchedEdi}</span></div>`;
+            
+            finalHtml += `<div class="table-wrapper"><table>`;
+            finalHtml += `<tr><th>구분 \\ 병원명</th>`;
+            selectedHospitals.forEach(hosp => { finalHtml += `<th>${hosp}</th>`; });
+            finalHtml += `</tr><tr><td>비용(금액)</td>`;
+            selectedHospitals.forEach(hosp => {
+                const found = itemData.find(d => d.hospName === hosp);
+                finalHtml += `<td class="row-price">${found && found.price !== "0" ? Number(found.price).toLocaleString() + '원' : '-'}</td>`;
+            });
+            finalHtml += `</tr><tr><td>최종 등록일자</td>`;
+            selectedHospitals.forEach(hosp => {
+                const found = itemData.find(d => d.hospName === hosp);
+                finalHtml += `<td class="row-date">${found ? found.date : '-'}</td>`;
+            });
+            finalHtml += `</tr></table></div>`;
+
+            finalHtml += `
+                <div class="chart-container">
+                    <div class="chart-title">[ ${targetItem} ] 실시간 비용 비교 차트</div>
+                    <canvas id="chart-${i}"></canvas>
+                </div>
+            `;
+        }
+        resultArea.innerHTML = finalHtml;
+
+        for (let i=0; i<matchedItemNames.length; i++) {
+            const targetItem = matchedItemNames[i];
+            const itemData = allData.filter(d => d.itemName === targetItem);
+            
+            const labels = [];
+            const prices = [];
+            const backgroundColors = [];
+            const borderColors = [];
+
+            selectedHospitals.forEach(hosp => {
+                labels.push(hosp);
+                const found = itemData.find(d => d.hospName === hosp);
+                const priceNum = found ? Number(found.price) : 0;
+                prices.push(priceNum);
+
+                if(hosp === "한림대학교성심병원") {
+                    backgroundColors.push('rgba(241, 92, 117, 0.7)'); 
+                    borderColors.push('#F15C75'); 
+                } else {
+                    backgroundColors.push('rgba(65, 182, 230, 0.5)'); 
+                    borderColors.push('#41B6E6'); 
+                }
+            });
+
+            const ctx = document.getElementById(`chart-${i}`).getContext('2d');
+            const newChart = new Chart(ctx, {
+                type: 'bar', 
+                data: {
+                    labels: labels, 
+                    datasets: [{
+                        label: '비용(원)',
+                        data: prices, 
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 2,
+                        borderRadius: 5 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, /* 모바일 높이 고정용 */
+                    plugins: {
+                        legend: { display: false } 
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value.toLocaleString() + '원';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            myCharts.push(newChart); 
+        }
+    }
+</script>
+
+</body>
+</html>
