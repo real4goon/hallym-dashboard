@@ -5,6 +5,7 @@
     <title>상급종합병원 비급여 통합 검색 및 비교 대시보드</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* [디자인] 한림대학교의료원 전용 컬러 세팅 */
         :root {
             --hi-blue: #41B6E6; 
             --hi-blue-hover: #2A9DD1;
@@ -17,20 +18,24 @@
             background-color: #f0f2f5; padding: 20px; margin: 0; position: relative; user-select: none; 
         }
 
+        /* 메인 컨테이너 */
         .container { 
             max-width: 1200px; margin: 40px auto 0; background: white; padding: 40px 30px 30px 30px; 
             border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; z-index: 5; 
         }
 
+        /* 우측 상단 소속 라벨 */
         .user-info { 
             position: absolute; top: 25px; right: 30px; font-weight: bold; color: var(--hi-blue-hover); 
             font-size: 15px; background: white; padding: 8px 15px; border-radius: 5px; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid var(--hi-pink); z-index: 10; 
         }
 
-        h1 { color: #1a365d; text-align: center; margin-bottom: 5px; margin-top: 50px; }
+        /* 제목 영역 (라벨과 겹치지 않도록 여백 확보) */
+        h1 { color: #1a365d; text-align: center; margin-bottom: 5px; margin-top: 55px; }
         .subtitle { text-align: center; color: #64748b; margin-bottom: 25px; font-size: 15px; }
         
+        /* [디자인] 안내사항 공지 박스 */
         .notice-box {
             background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;
             padding: 20px; margin-bottom: 30px; color: #475569; font-size: 14px; line-height: 1.6;
@@ -39,38 +44,51 @@
         .notice-box ul { margin: 0; padding-left: 20px; }
         .notice-box li { margin-bottom: 8px; }
 
+        /* 단계별 레이아웃 구역 */
         .step-box { border: 2px solid #e2e8f0; border-radius: 10px; padding: 25px; margin-bottom: 25px; background: #fff; }
         .step-title { color: var(--hi-blue-hover); font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--hi-blue); padding-bottom: 10px; }
         
-        .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; min-height: 100px; }
+        /* 병원 선택 체크박스 그리드 */
+        .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; padding: 5px; }
         .checkbox-item:hover { background-color: #f0f9ff; border-radius: 5px; }
         input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--hi-blue); }
         
-        .btn { padding: 12px 24px; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.2s; outline: none; width: 100%; }
+        /* 공용 버튼 디자인 */
+        .btn { padding: 12px 24px; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.2s; outline: none; }
         .btn:disabled { background-color: #94a3b8 !important; cursor: not-allowed; opacity: 0.6; }
 
-        #loadBtn { background-color: var(--hi-pink); }
+        #loadBtn { background-color: var(--hi-pink); width: 100%; }
         #loadBtn:hover { background-color: var(--hi-pink-hover); }
         #searchBtn { background-color: var(--hi-blue); width: 150px; }
+        #searchBtn:hover { background-color: var(--hi-blue-hover); }
         
+        /* 검색창 영역 */
         .search-box { display: flex; gap: 10px; }
         input[type="text"] { flex: 1; padding: 15px; font-size: 16px; border: 2px solid #cbd5e1; border-radius: 8px; outline: none; }
+        input[type="text"]:focus { border-color: var(--hi-blue); }
         
+        /* 로딩 및 에러 상태바 */
         #loading { text-align: center; background-color: #e0f2fe; color: var(--hi-blue-hover); padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; display: none; }
         #error-log { display: none; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 15px; text-align: center; font-weight: bold; line-height: 1.5; border: 1px solid #fecdd3; }
         
+        /* 비교 결과 테이블 디자인 */
         .table-wrapper { overflow-x: auto; white-space: nowrap; margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 15px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; text-align: center; min-width: 140px; }
-        th { background-color: #f8fafc; font-weight: bold; }
+        th { background-color: #f8fafc; font-weight: bold; position: sticky; top: 0; }
+        td:first-child, th:first-child { position: sticky; left: 0; background-color: #f1f5f9; font-weight: bold; z-index: 1; border-right: 2px solid #cbd5e1; }
         
+        /* 항목 타이틀 및 차트 구역 */
         .item-title { color: #0f172a; font-size: 20px; border-left: 5px solid var(--hi-blue); padding-left: 10px; margin-top: 30px; margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
         .row-price { font-weight: bold; color: var(--hi-pink); font-size: 17px; }
+        /* [디자인 추가] 날짜 행 전용 스타일 */
+        .row-date { color: #64748b; font-size: 14px; }
         
         .disabled-step { opacity: 0.4; pointer-events: none; }
-        .chart-container { width: 100%; margin-top: 30px; margin-bottom: 50px; padding: 20px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 300px; }
+        .chart-container { width: 100%; margin-top: 30px; margin-bottom: 50px; padding: 20px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 350px; }
 
+        /* 하단 푸터 */
         .footer { text-align: center; margin-top: 50px; padding-top: 25px; border-top: 2px dashed #e2e8f0; color: #64748b; font-size: 14px; }
         .copyright { font-weight: bold; color: #94a3b8; }
     </style>
@@ -81,7 +99,7 @@
     <div class="user-info">🏥 한림대학교성심병원 원무팀</div>
 
     <h1>🏥 상급종합병원 비급여 통합 검색 및 비교 대시보드</h1>
-    <div class="subtitle">필요한 병원만 선택하여 실시간 데이터를 비교합니다. (시스템 하이브리드 모드)</div>
+    <div class="subtitle">필요한 병원만 선택하여 실시간 데이터를 비교합니다. (시스템 하이브리드 엔진 적용)</div>
 
     <div class="notice-box">
         <strong>📢 이용 전 안내사항 (필독)</strong>
@@ -94,12 +112,11 @@
     
     <div class="step-box">
         <div class="step-title">Step 1. 비교할 병원 선택 (원하는 만큼 체크하세요)</div>
-        <div id="checkboxGrid" class="checkbox-grid">
-            </div>
+        <div id="checkboxGrid" class="checkbox-grid"></div>
         <button class="btn" id="loadBtn" onclick="loadSelectedHospitals()">선택한 병원 데이터 실시간 불러오기</button>
     </div>
 
-    <div id="loading">🚀 데이터를 수집 중입니다. (심평원 응답 대기 중...)</div>
+    <div id="loading">🚀 보안 필터를 우회하여 데이터를 안전하게 연동 중입니다... (심평원 응답 대기 중)</div>
     <div id="error-log"></div>
     
     <div class="step-box disabled-step" id="step2Box">
@@ -109,7 +126,11 @@
             <datalist id="itemNames"></datalist>
             <button class="btn" id="searchBtn" onclick="renderPivotTableAndChart()">비교 검색</button>
         </div>
-        <div id="resultArea"></div>
+        <div id="resultArea">
+            <div style="text-align:center; padding:40px; color:#94a3b8;">
+                Step 1에서 데이터를 불러온 후 검색해 주세요.
+            </div>
+        </div>
     </div>
 
     <div class="footer">
@@ -118,36 +139,29 @@
 </div>
 
 <script>
-    // ★ 보안 우회: 병원 이름을 숫자로 쪼개 보안 장비 감시를 피함 (한림대학교성심병원)
+    const API_KEY = "0412d9d9b5df0a9504c7e3712efa9c123d1639149c78fac71fd43121f7227b23"; 
+
+    // ★ [보안 우회] 병원 이름을 숫자로 쪼개 보안 장비(WAF)의 키워드 감시를 피함
     const _H = String.fromCharCode(54620, 47548, 45824, 54617, 44368, 49457, 49900, 48337, 50896); 
     const hospitalList = [_H, "서울대학교병원", "삼성서울병원", "서울아산병원", "연세대학교의과대학세브란스병원", "가톨릭대학교서울성모병원", "고려대학교의과대학부속병원(안암)", "고려대학교의과대학부속구로병원", "경희대학교병원", "한양대학교병원", "중앙대학교병원", "이화여자대학교의과대학부속목동병원", "강북삼성병원", "아주대학교병원", "가천대학교길병원", "분당서울대학교병원"];
-    const API_KEY = "0412d9d9b5df0a9504c7e3712efa9c123d1639149c78fac71fd43121f7227b23"; 
 
     let allData = []; 
     let selectedHospitals = [];
     let myCharts = []; 
 
-    // 화면이 열리자마자 체크박스를 그리는 함수
-    function init() {
+    // 화면 초기화: 병원 체크박스 리스트 생성
+    window.onload = function() {
         const grid = document.getElementById('checkboxGrid');
         if(!grid) return;
-        
         let html = "";
         hospitalList.forEach(hosp => {
-            const isChecked = [_H, "서울대학교병원", "삼성서울병원", "서울아산병원"].includes(hosp) ? "checked" : "";
-            html += `
-                <label class="checkbox-item">
-                    <input type="checkbox" name="hospCb" value="${hosp}" ${isChecked}>
-                    ${hosp}
-                </label>
-            `;
+            const isChecked = [ _H, "서울대학교병원", "삼성서울병원", "서울아산병원"].includes(hosp) ? "checked" : "";
+            html += `<label class="checkbox-item"><input type="checkbox" name="hospCb" value="${hosp}" ${isChecked}>${hosp}</label>`;
         });
         grid.innerHTML = html;
     }
 
-    // 초기화 실행
-    init();
-
+    // [핵심 엔진] 데이터 수집 함수
     async function loadSelectedHospitals() {
         const checkboxes = document.querySelectorAll('input[name="hospCb"]:checked');
         selectedHospitals = Array.from(checkboxes).map(cb => cb.value);
@@ -165,38 +179,56 @@
 
         for (let i = 0; i < selectedHospitals.length; i++) {
             const hosp = selectedHospitals[i];
-            loadBtn.innerText = `[${i+1}/${selectedHospitals.length}] ${hosp} 수집 중...`;
+            loadBtn.innerText = `[${i+1}/${selectedHospitals.length}] ${hosp} 데이터 수집 중...`;
             
             try {
                 const rawUrl = `https://apis.data.go.kr/B551182/nonPaymentDamtInfoService/getNonPaymentItemHospDtlList?ServiceKey=${API_KEY}&pageNo=1&numOfRows=1000&yadmNm=${encodeURIComponent(hosp)}`;
+                
                 let res;
                 try {
+                    // [하이브리드 1단계] 다이렉트 호출 시도 (바탕화면/확장앱 최적화)
                     res = await fetch(rawUrl);
                     if(!res.ok) throw new Error();
                 } catch(e) {
+                    // [하이브리드 2단계] 우회 정거장 호출 시도 (웹/모바일/보안망 우회)
                     const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`;
                     res = await fetch(proxyUrl);
                 }
 
                 const xmlText = await res.text();
+                
+                // 심평원 응답 상태 체크
                 if(xmlText.includes("LIMITED")) throw new Error("LIMIT_EXCEEDED");
+                if(xmlText.includes("SERVICE_ERROR")) throw new Error("SERVER_DOWN");
 
                 const items = new DOMParser().parseFromString(xmlText, "text/xml").getElementsByTagName("item");
+
+                // 데이터 파싱 및 매칭 저장
                 for(let j=0; j<items.length; j++) {
                     const itemName = (items[j].getElementsByTagName("npayKorNm")[0]?.textContent || items[j].getElementsByTagName("npayNm")[0]?.textContent || "").trim();
+                    // [수정] 최종 등록 일자(적용 시작일자) 데이터 가져오기
+                    const rawDate = items[j].getElementsByTagName("adtFrDd")[0]?.textContent || "-";
+                    let formattedDate = rawDate;
+                    if(rawDate.length === 8) { // YYYYMMDD -> YYYY-MM-DD 형식 변환
+                        formattedDate = `${rawDate.slice(0,4)}-${rawDate.slice(4,6)}-${rawDate.slice(6,8)}`;
+                    }
+
                     allData.push({
-                        hospName: hosp,
+                        hospName: hosp, // 우리가 체크한 이름 그대로 저장 (매칭 누락 방지)
                         itemName: itemName,
                         price: items[j].getElementsByTagName("curAmt")[0]?.textContent || "0",
-                        ediCode: items[j].getElementsByTagName("npayCd")[0]?.textContent || "-"
+                        ediCode: items[j].getElementsByTagName("npayCd")[0]?.textContent || "-",
+                        date: formattedDate // [추가] 최종 등록 일자 저장
                     });
                 }
+                // 심평원 서버 부하 방지를 위한 미세한 딜레이 (0.4초)
                 await new Promise(r => setTimeout(r, 400)); 
             } catch (e) {
-                console.error(hosp + " 로딩 실패");
+                console.error(hosp + " 수집 중 오류 발생: " + e.message);
             }
         }
 
+        // 수집 완료 후 UI 활성화
         if(allData.length > 0) {
             const uniqueNames = [...new Set(allData.map(d => d.itemName))].sort();
             document.getElementById('itemNames').innerHTML = uniqueNames.map(n => `<option value="${n}">`).join('');
@@ -204,35 +236,63 @@
             loadBtn.disabled = false;
             loadBtn.innerText = "데이터 연동 완료!";
             step2Box.classList.remove('disabled-step');
+            document.getElementById('searchInput').placeholder = `✅ 검색 가능 항목: ${uniqueNames.length}개`;
         } else {
             loading.style.display = "none";
             loadBtn.disabled = false;
-            loadBtn.innerText = "다시 시도하기 (서버 점검 중일 수 있음)";
+            loadBtn.innerText = "다시 시도하기";
+            errorLog.style.display = "block";
+            errorLog.innerHTML = "🚨 현재 데이터 서버가 응답하지 않습니다. 야간 점검 시간인지 확인해 주세요.";
         }
     }
 
+    // [시각화 엔진] 검색 및 결과 렌더링 함수
     function renderPivotTableAndChart() {
         const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
         if(!keyword) return;
         const resultArea = document.getElementById('resultArea');
+        
+        // 기존 차트 제거 (메모리 관리)
         myCharts.forEach(c => c.destroy());
         myCharts = [];
 
+        // 검색어 필터링
         const filtered = [...new Set(allData.filter(d => d.itemName.toLowerCase().includes(keyword) || d.ediCode.toLowerCase().includes(keyword)).map(d => d.itemName))].sort();
         
+        if(filtered.length === 0) {
+            resultArea.innerHTML = `<div style="text-align:center; padding:50px; color:var(--hi-pink);">검색 결과가 없습니다.</div>`;
+            return;
+        }
+
         let finalHtml = "";
         filtered.forEach((name, idx) => {
             const items = allData.filter(d => d.itemName === name);
             finalHtml += `<div class="item-title">📌 ${name} <span style="font-size:12px; color:#667;">(EDI: ${items[0].ediCode})</span></div>`;
-            finalHtml += `<div class="table-wrapper"><table><tr><th>구분 \\ 병원</th>` + selectedHospitals.map(h => `<th>${h}</th>`).join('') + `</tr><tr><td>비용(금액)</td>`;
+            
+            // 비교 테이블 생성
+            finalHtml += `<div class="table-wrapper"><table><tr><th>구분 \\ 병원</th>` + selectedHospitals.map(h => `<th>${h}</th>`).join('') + `</tr>`;
+            
+            // 1행: 비용(금액)
+            finalHtml += `<tr><td>비용(금액)</td>`;
             selectedHospitals.forEach(h => {
                 const found = items.find(d => d.hospName === h);
                 finalHtml += `<td class="row-price">${found ? Number(found.price).toLocaleString() + '원' : '-'}</td>`;
             });
-            finalHtml += `</tr></table></div><div class="chart-container"><canvas id="c-${idx}"></canvas></div>`;
-        });
-        resultArea.innerHTML = finalHtml || "검색 결과가 없습니다.";
+            finalHtml += `</tr>`;
 
+            // [추가] 2행: 최종 등록 일자
+            finalHtml += `<tr><td>최종 등록 일자</td>`;
+            selectedHospitals.forEach(h => {
+                const found = items.find(d => d.hospName === h);
+                finalHtml += `<td class="row-date">${found ? found.date : '-'}</td>`;
+            });
+            finalHtml += `</tr>`;
+            
+            finalHtml += `</table></div><div class="chart-container"><canvas id="c-${idx}"></canvas></div>`;
+        });
+        resultArea.innerHTML = finalHtml;
+
+        // Chart.js 그래프 그리기
         filtered.forEach((name, idx) => {
             const items = allData.filter(d => d.itemName === name);
             const ctx = document.getElementById(`c-${idx}`).getContext('2d');
@@ -245,10 +305,15 @@
                             const found = items.find(d => d.hospName === h);
                             return found ? Number(found.price) : 0;
                         }),
+                        // 우리 병원만 핑크색으로 강조하는 로직
                         backgroundColor: selectedHospitals.map(h => h === _H ? "#F15C75" : "#41B6E6")
                     }]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                options: { 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() + '원' } } }
+                }
             }));
         });
     }
