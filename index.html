@@ -41,7 +41,7 @@
         .row-price { font-weight: bold; color: var(--hi-pink); font-size: 17px; }
         .row-date { color: #64748b; font-size: 13px; margin-left: 8px; font-weight: normal; }
         .chart-container { width: 100%; margin-top: 30px; margin-bottom: 50px; padding: 20px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 350px; }
-        .footer { text-align: center; margin-top: 50px; padding-top: 25px; border-top: 2px dashed #e2e8f0; color: #64748b; font-size: 14px; }
+        .footer { text-align: center; margin-top: 50px; padding-top: 25px; border-top: 2px dashed #e2e8f0; color: #64748b; font-size: 14px; line-height: 1.8; }
         .footer a { color: var(--hi-blue); text-decoration: none; font-weight: bold; }
     </style>
 </head>
@@ -81,7 +81,8 @@
 
     <div class="footer">
         🔗 공식 링크: <a href="https://real4goon.github.io/hallym-dashboard/" target="_blank">https://real4goon.github.io/hallym-dashboard/</a><br>
-        Copyright © 2026. 한림대학교성심병원 원무팀 김영선 대리. All rights reserved.
+        Copyright © 2026. 한림대학교성심병원 원무팀 김영선 대리. All rights reserved.<br>
+        4goon@hallym.or.kr
     </div>
 </div>
 
@@ -160,7 +161,7 @@
             return;
         }
 
-        excelBtn.style.display = "block"; // 결과가 있으면 엑셀 버튼 표시
+        excelBtn.style.display = "block";
         let finalHtml = "";
         filtered.forEach((name, idx) => {
             const items = allData.filter(d => d.itemName === name);
@@ -195,14 +196,12 @@
         });
     }
 
-    // ★ [핵심] 엑셀 추출 함수
     function exportToExcel() {
         const keyword = document.getElementById('searchInput').value.trim();
         const filteredData = allData.filter(d => d.itemName.toLowerCase().includes(keyword.toLowerCase()) || d.ediCode.toLowerCase().includes(keyword.toLowerCase()));
         
-        // 엑셀에 들어갈 데이터 구조화
         const excelRows = [
-            ["항목명", "EDI코드", "병원명", "단가", "최종등록일"] // 헤더
+            ["항목명", "EDI코드", "병원명", "단가", "최종등록일"]
         ];
 
         filteredData.forEach(d => {
@@ -212,7 +211,6 @@
         const workbook = XLSX.utils.book_new();
         const worksheet = XLSX.utils.aoa_to_sheet(excelRows);
         
-        // 시트 추가 및 다운로드
         XLSX.utils.book_append_sheet(workbook, worksheet, "비급여비교결과");
         XLSX.writeFile(workbook, `비급여비교_${keyword}_${new Date().toLocaleDateString()}.xlsx`);
     }
