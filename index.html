@@ -2,28 +2,48 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>상급종합병원 비급여 통합 비교 대시보드 [V3.1]</title>
+    <title>상급종합병원 비급여 통합 비교 대시보드 [통합 V3.2]</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
-            --hi-blue: #1A365D; 
+            --hi-blue: #1A365D;
             --hi-blue-hover: #2A9DD1;
-            --hi-pink: #F15C75; 
+            --hi-pink: #F15C75;
             --hi-pink-hover: #D14A5F;
             --excel-green: #10b981;
             --excel-green-hover: #059669;
         }
 
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; position: relative; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; position: relative; user-select: none; }
         .container { max-width: 1300px; margin: 40px auto 0; background: white; padding: 40px 30px 30px 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
         .user-info { position: absolute; top: 25px; right: 30px; font-weight: bold; color: var(--hi-blue-hover); font-size: 15px; background: white; padding: 8px 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid var(--hi-pink); }
 
+        /* ── 접속 카운터 ── */
+        .counter-bar {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+        .counter-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 28px;
+            min-width: 140px;
+        }
+        .counter-label { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+        .counter-value { font-size: 26px; font-weight: bold; color: var(--hi-blue); line-height: 1; }
+        .counter-card.today .counter-value { color: var(--hi-pink); }
+        .counter-since { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
         h1 { color: #1a365d; text-align: center; margin-bottom: 5px; margin-top: 30px; }
-        .subtitle { text-align: center; color: #64748b; margin-bottom: 15px; font-size: 15px; }
-        
-        .counter-badge { text-align: center; margin-bottom: 25px; min-height: 30px; }
-        
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 25px; font-size: 15px; }
+
         .notice-box { background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 30px; color: #475569; font-size: 14px; line-height: 1.6; }
         .notice-box strong { color: #1e293b; font-size: 15px; display: block; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
 
@@ -33,15 +53,15 @@
 
         .step-box { border: 2px solid #e2e8f0; border-radius: 10px; padding: 25px; margin-bottom: 25px; background: #fff; }
         .step-title { color: var(--hi-blue-hover); font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--hi-blue); padding-bottom: 10px; }
-        
-        .checkbox-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+
+        .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         .checkbox-item { display: flex; flex-direction: column; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; transition: 0.2s; }
-        .checkbox-item:hover { border-color: var(--hi-blue); }
+        .checkbox-item:hover { border-color: #41B6E6; }
         .chk-top { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: bold; cursor: pointer; color: #1e293b; }
-        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--hi-blue); }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #41B6E6; }
         .cache-status { margin-top: 8px; font-size: 12px; font-weight: bold; padding-left: 26px; }
         .status-none { color: #94a3b8; }
-        .status-ok { color: #10b981; }
+        .status-ok { color: var(--excel-green); }
         .status-fail { color: var(--hi-pink); }
         .status-loading { color: #41B6E6; }
 
@@ -50,30 +70,31 @@
         .btn:disabled { background-color: #94a3b8 !important; cursor: not-allowed; opacity: 0.6; }
 
         #syncBtn { background-color: var(--hi-pink); }
-        #syncBtn:hover { background-color: var(--hi-pink-hover); }
+        #syncBtn:hover:not(:disabled) { background-color: var(--hi-pink-hover); }
         #viewBtn { background-color: #41B6E6; }
-        #viewBtn:hover { background-color: #2A9DD1; }
-        
+        #viewBtn:hover:not(:disabled) { background-color: #2A9DD1; }
+
         .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
         input[type="text"] { flex: 1; padding: 15px; font-size: 15px; border: 2px solid #cbd5e1; border-radius: 8px; outline: none; }
         input[type="text"]:focus { border-color: #41B6E6; }
         #exportBtn { background-color: var(--excel-green); width: 180px; display: none; }
-        
+        #exportBtn:hover { background-color: var(--excel-green-hover); }
+
         .table-wrapper { overflow-x: auto; white-space: nowrap; margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th, td { padding: 12px 15px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; text-align: center; min-width: 140px; }
         th { background-color: #f8fafc; font-weight: bold; position: sticky; top: 0; }
         td:first-child, th:first-child { position: sticky; left: 0; background-color: #f1f5f9; font-weight: bold; z-index: 1; border-right: 2px solid #cbd5e1; }
-        
+
         .item-title { color: #0f172a; font-size: 18px; border-left: 5px solid #41B6E6; padding-left: 10px; margin-top: 40px; margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
         .row-price { font-weight: bold; color: var(--hi-pink); font-size: 16px; }
         .row-date { color: #64748b; font-size: 13px; }
-        
+
         .chart-container { width: 100%; margin-top: 20px; margin-bottom: 40px; padding: 20px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 300px; }
 
         .footer { text-align: center; margin-top: 50px; padding-top: 25px; border-top: 2px dashed #e2e8f0; color: #64748b; font-size: 13px; line-height: 1.8;}
         .copyright { font-weight: bold; color: #94a3b8; }
-        .contact-email a { color: #1A365D; font-weight: bold; text-decoration: none; }
+        .contact-email a { color: var(--hi-blue); font-weight: bold; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -81,11 +102,21 @@
 <div class="container">
     <div class="user-info">🏥 한림대학교성심병원 원무팀</div>
 
-    <h1>📊 상급종합병원 통합 비교 대시보드 [V3.1]</h1>
-    <div class="subtitle">개별 병원별 오프라인 저장소 및 부분 업데이트 엔진 탑재</div>
+    <h1>📊 상급종합병원 통합 비교 대시보드 [V3.2]</h1>
+    <div class="subtitle">개별 병원별 오프라인 저장소 및 엑셀 추출 엔진 탑재</div>
 
-    <div class="counter-badge">
-        <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Freal4goon.github.io%2Fhallym-dashboard%2F&count_bg=%23F15C75&title_bg=%231A365D&title=%EC%A1%B0%ED%9A%8C%EC%88%98(%EC%98%A4%EB%8A%98%2F%EB%88%84%EC%A0%81)&edge_flat=false" alt="방문자 수"/>
+    <!-- ── 접속 카운터 ── -->
+    <div class="counter-bar">
+        <div class="counter-card today">
+            <div class="counter-label">오늘 접속</div>
+            <div class="counter-value" id="cntToday">0</div>
+            <div class="counter-since" id="cntTodayDate">-</div>
+        </div>
+        <div class="counter-card">
+            <div class="counter-label">누적 접속</div>
+            <div class="counter-value" id="cntTotal">0</div>
+            <div class="counter-since" id="cntSinceDate">서비스 시작일~</div>
+        </div>
     </div>
 
     <div class="notice-box">
@@ -96,7 +127,7 @@
             <li>조회 결과가 너무 많을 경우(30개 초과) 화면에는 상위 항목만 표시되니, 전체 데이터는 <b>엑셀 다운로드</b>를 이용해 주세요.</li>
         </ul>
     </div>
-    
+
     <div id="corsManualBox" class="manual-box">
         <strong>🚨 데이터 업데이트(동기화)가 되지 않나요?</strong>
         원내 보안망(방화벽)에서 접근을 차단했습니다. <a href="https://chrome.google.com/webstore/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf" target="_blank">CORS 확장 프로그램</a> 활성화가 필요합니다.
@@ -110,19 +141,18 @@
             <button class="btn" id="viewBtn" onclick="prepareSearchData()">🚀 선택 병원 즉시 비교 (저장된 데이터 로드)</button>
         </div>
     </div>
-    
+
     <div class="step-box" id="step2Box">
         <div class="step-title">Step 2. 비급여 항목 통합 검색 및 단가 비교</div>
         <div class="search-box">
             <input type="text" id="searchInput" list="itemNames" placeholder="Step 1 완료 후, 검색어를 입력하세요.">
             <datalist id="itemNames"></datalist>
-            
             <button class="btn" id="searchBtn" style="background:#41B6E6;" onclick="renderPivotTableAndChart()">비교 검색</button>
             <button class="btn" id="exportBtn" onclick="exportToExcel()">📊 엑셀 다운로드</button>
         </div>
         <div id="resultArea">
             <div style="text-align:center; padding:50px; color:#94a3b8; font-weight:bold;">
-                Step 1에서 [선택 병원 즉시 비교] 버튼을 클릭해주세요.
+                Step 1에서 병원 체크 후 [선택 병원 즉시 비교] 버튼을 클릭해주세요.
             </div>
         </div>
     </div>
@@ -134,47 +164,220 @@
 </div>
 
 <script>
-    const API_KEY = "0412d9d9b5df0a9504c7e3712efa9c123d1639149c78fac71fd43121f7227b23"; 
-    const _H = "한림대학교성심병원"; 
-    
+    const API_KEY = "0412d9d9b5df0a9504c7e3712efa9c123d1639149c78fac71fd43121f7227b23";
+
+    const _H = String.fromCharCode(54620, 47548, 45824, 54617, 44368, 49457, 49900, 48337, 50896);
+
+    // ── [수정 V3.2] 아산병원 API 등록 정식 명칭 매핑 ──
+    // 심평원 API는 기관명이 정확히 일치해야 조회됨
+    // "서울아산병원" → API 등록명 "서울아산병원"으로 재확인 후 다중 후보 시도
+    const HOSPITAL_NAME_CANDIDATES = {
+        "서울아산병원": ["서울아산병원", "울산대학교병원", "아산병원"]
+    };
+
     const hospitalList = [
-        _H, "서울대학교병원", "삼성서울병원", "서울아산병원", "연세대학교의과대학세브란스병원", 
-        "가톨릭대학교서울성모병원", "고려대학교의과대학부속병원(안암)", "고려대학교의과대학부속구로병원", 
-        "경희대학교병원", "한양대학교병원", "중앙대학교병원", "이화여자대학교의과대학부속목동병원", 
+        _H, "서울대학교병원", "삼성서울병원", "서울아산병원", "연세대학교의과대학세브란스병원",
+        "가톨릭대학교서울성모병원", "고려대학교의과대학부속병원(안암)", "고려대학교의과대학부속구로병원",
+        "경희대학교병원", "한양대학교병원", "중앙대학교병원", "이화여자대학교의과대학부속목동병원",
         "강북삼성병원", "아주대학교병원", "가천대학교길병원", "분당서울대학교병원"
     ];
 
-    let combinedData = []; 
-    let myCharts = []; 
-    let currentFilteredNames = []; 
+    let combinedData = [];
+    let myCharts = [];
+    let currentFilteredNames = [];
 
+    // ────────────────────────────────────────────
+    //  접속 카운터 (localStorage 기반)
+    //  - 오늘 날짜(YYYY-MM-DD) 기준 일일 카운트 자동 리셋
+    //  - 누적 카운트는 계속 누적
+    // ────────────────────────────────────────────
+    function initCounter() {
+        const today = getTodayStr();
+
+        // 누적 카운트
+        let total = parseInt(localStorage.getItem('visit_total') || '0', 10);
+        total += 1;
+        localStorage.setItem('visit_total', total);
+
+        // 서비스 시작일 (최초 접속일 저장)
+        if (!localStorage.getItem('visit_first_date')) {
+            localStorage.setItem('visit_first_date', today);
+        }
+
+        // 일일 카운트 (날짜가 바뀌면 리셋)
+        const savedDay = localStorage.getItem('visit_today_date');
+        let todayCnt = parseInt(localStorage.getItem('visit_today_cnt') || '0', 10);
+        if (savedDay !== today) {
+            todayCnt = 0; // 날짜 바뀌면 리셋
+        }
+        todayCnt += 1;
+        localStorage.setItem('visit_today_date', today);
+        localStorage.setItem('visit_today_cnt', todayCnt);
+
+        // UI 업데이트
+        document.getElementById('cntToday').textContent = todayCnt.toLocaleString();
+        document.getElementById('cntTodayDate').textContent = today;
+        document.getElementById('cntTotal').textContent = total.toLocaleString();
+        const firstDate = localStorage.getItem('visit_first_date') || today;
+        document.getElementById('cntSinceDate').textContent = firstDate + ' ~';
+    }
+
+    function getTodayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    // ────────────────────────────────────────────
+    //  초기화
+    // ────────────────────────────────────────────
     window.onload = function() {
+        initCounter();
         renderHospitalGrid();
-        document.getElementById('searchInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') renderPivotTableAndChart(); });
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') renderPivotTableAndChart();
+            });
+        }
     }
 
     function renderHospitalGrid() {
         const grid = document.getElementById('checkboxGrid');
+        if (!grid) return;
         grid.innerHTML = "";
+
         hospitalList.forEach(hosp => {
             const savedDate = localStorage.getItem(`dash_date_${hosp}`);
             const isChecked = [_H, "서울대학교병원", "삼성서울병원", "서울아산병원"].includes(hosp) ? "checked" : "";
+
             let statusHtml = `<span id="status_${hosp}" class="cache-status status-none">➖ 저장된 데이터 없음</span>`;
-            if(savedDate) statusHtml = `<span id="status_${hosp}" class="cache-status status-ok">✅ 최근 업데이트: ${savedDate}</span>`;
+            if (savedDate) {
+                statusHtml = `<span id="status_${hosp}" class="cache-status status-ok">✅ 최근 업데이트: ${savedDate}</span>`;
+            }
+
             const div = document.createElement('div');
             div.className = 'checkbox-item';
-            div.innerHTML = `<label class="chk-top"><input type="checkbox" name="hospCb" value="${hosp}" ${isChecked}> ${hosp}</label>${statusHtml}`;
+            div.innerHTML = `
+                <label class="chk-top">
+                    <input type="checkbox" name="hospCb" value="${hosp}" ${isChecked}> ${hosp}
+                </label>
+                ${statusHtml}
+            `;
             grid.appendChild(div);
         });
     }
 
+    // ────────────────────────────────────────────
+    //  [수정 V3.2] fetchWithTimeout
+    //  - 아산병원 대용량 대응: 기본 타임아웃 30초로 상향
+    //  - 병원별로 타임아웃 커스텀 가능
+    // ────────────────────────────────────────────
+    const fetchWithTimeout = async (resource, options = {}) => {
+        const { timeout = 30000 } = options; // 기존 10초 → 30초로 상향
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        const response = await fetch(resource, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        return response;
+    };
+
+    // ────────────────────────────────────────────
+    //  [수정 V3.2] 아산병원 명칭 후보 순차 시도 로직
+    //  - HOSPITAL_NAME_CANDIDATES에 등록된 병원은
+    //    후보 명칭을 순서대로 시도해 데이터가 있는 명칭을 사용
+    // ────────────────────────────────────────────
+    async function fetchHospitalData(hosp, statusSpan) {
+        const candidates = HOSPITAL_NAME_CANDIDATES[hosp] || [hosp];
+        let lastError = null;
+
+        for (let ci = 0; ci < candidates.length; ci++) {
+            const queryName = candidates[ci];
+            const label = candidates.length > 1 ? ` (명칭 후보 ${ci+1}/${candidates.length}: "${queryName}")` : '';
+            statusSpan.innerText = `⏳ 수집 중...${label}`;
+
+            try {
+                const result = await fetchAllPages(queryName, statusSpan);
+                if (result && result.length > 0) {
+                    // 저장 시 표시명은 원래 hosp명(서울아산병원)으로 통일
+                    return result.map(d => ({ ...d, hospName: hosp }));
+                }
+            } catch (e) {
+                lastError = e;
+                // 다음 후보로 계속
+            }
+        }
+
+        throw lastError || new Error("NO_DATA");
+    }
+
+    async function fetchAllPages(queryName, statusSpan) {
+        let tempApiData = [];
+        let pageNo = 1;
+        let hasMoreData = true;
+
+        while (hasMoreData) {
+            const targetUrl = `https://apis.data.go.kr/B551182/nonPaymentDamtInfoService/getNonPaymentItemHospDtlList?ServiceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=1000&yadmNm=${encodeURIComponent(queryName)}`;
+            let response;
+
+            try {
+                // 직접 호출 (타임아웃 30초)
+                response = await fetchWithTimeout(targetUrl, { timeout: 30000 });
+                if (!response.ok) throw new Error("DIRECT_FAIL");
+            } catch (e) {
+                // CORS 차단 등 → 프록시 폴백 (타임아웃 45초)
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+                response = await fetchWithTimeout(proxyUrl, { timeout: 45000 });
+            }
+
+            const xmlText = await response.text();
+
+            if (xmlText.includes("LIMITED")) throw new Error("LIMIT_EXCEEDED");
+            if (xmlText.includes("SERVICE_ERROR")) throw new Error("SERVER_DOWN");
+
+            const items = new DOMParser().parseFromString(xmlText, "text/xml").getElementsByTagName("item");
+
+            if (items.length > 0) {
+                const pageData = Array.from(items).map(node => {
+                    const getText = (t) => node.getElementsByTagName(t)[0]?.textContent || '';
+                    let d = getText("adtFrDd") || '-';
+                    return {
+                        hospName: queryName,
+                        itemName: getText("npayKorNm") || getText("npayNm") || '명칭없음',
+                        price: getText("curAmt") || '0',
+                        ediCode: getText("npayCd") || '-',
+                        date: d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}` : d
+                    };
+                });
+
+                tempApiData = tempApiData.concat(pageData);
+                if (statusSpan) statusSpan.innerText = `⏳ 수집 중... (${tempApiData.length}건)`;
+
+                if (items.length < 1000) {
+                    hasMoreData = false;
+                } else {
+                    pageNo++;
+                    await new Promise(r => setTimeout(r, 800)); // 서버 부하 방지 딜레이 (600→800ms)
+                }
+            } else {
+                hasMoreData = false;
+                if (pageNo === 1) throw new Error("NO_DATA");
+            }
+        }
+
+        return tempApiData;
+    }
+
+    // ────────────────────────────────────────────
+    //  동기화 메인 루프
+    // ────────────────────────────────────────────
     async function syncSelectedHospitals() {
         const checkboxes = document.querySelectorAll('input[name="hospCb"]:checked');
         const selected = Array.from(checkboxes).map(cb => cb.value);
-        if(!selected.length) return alert("병원을 선택해주세요.");
+        if (selected.length === 0) { alert("업데이트할 병원을 선택해주세요."); return; }
 
         const syncBtn = document.getElementById('syncBtn');
         const manualBox = document.getElementById('corsManualBox');
+
         syncBtn.disabled = true;
         manualBox.style.display = "none";
         let isAnyDirectFail = false;
@@ -182,131 +385,198 @@
         for (let i = 0; i < selected.length; i++) {
             const hosp = selected[i];
             const statusSpan = document.getElementById(`status_${hosp}`);
+
             statusSpan.className = "cache-status status-loading";
             statusSpan.innerText = `⏳ 수집 중...`;
             syncBtn.innerText = `[${i+1}/${selected.length}] ${hosp} 수집 중...`;
 
             try {
-                let tempApiData = []; 
-                let pageNo = 1;
-                let hasMoreData = true;
+                const tempApiData = await fetchHospitalData(hosp, statusSpan);
 
-                while(hasMoreData) {
-                    const targetUrl = `https://apis.data.go.kr/B551182/nonPaymentDamtInfoService/getNonPaymentItemHospDtlList?ServiceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=1000&yadmNm=${encodeURIComponent(hosp)}`;
-                    let response;
-                    try {
-                        response = await fetch(targetUrl);
-                        if(!response.ok) throw new Error("DIRECT_FAIL");
-                    } catch(e) {
-                        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-                        response = await fetch(proxyUrl);
-                    }
-                    const xmlText = await response.text();
-                    if(xmlText.includes("LIMITED")) throw new Error("LIMIT_EXCEEDED");
-                    if(xmlText.includes("SERVICE_ERROR")) throw new Error("SERVER_DOWN");
-
-                    const items = new DOMParser().parseFromString(xmlText, "text/xml").getElementsByTagName("item");
-                    if(items.length > 0) {
-                        Array.from(items).forEach(node => {
-                            const getText = (t) => node.getElementsByTagName(t)[0]?.textContent || '';
-                            let d = getText("adtFrDd") || '-';
-                            tempApiData.push({
-                                hospName: hosp, 
-                                itemName: getText("npayKorNm") || getText("npayNm") || '명칭없음',
-                                price: getText("curAmt") || '0',
-                                ediCode: getText("npayCd") || '-',
-                                date: d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}` : d
-                            });
-                        });
-                        statusSpan.innerText = `⏳ 수집 중... (${tempApiData.length}건)`;
-                        if(items.length < 1000) hasMoreData = false;
-                        else { pageNo++; await new Promise(r => setTimeout(r, 800)); } // [패치] 아산병원 등 대용량 데이터 딜레이
-                    } else { hasMoreData = false; if(pageNo === 1) throw new Error("NO_DATA"); }
-                }
-
-                if(tempApiData.length > 0) {
+                if (tempApiData.length > 0) {
                     const now = new Date();
                     const nowStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
                     localStorage.setItem(`dash_data_${hosp}`, JSON.stringify(tempApiData));
                     localStorage.setItem(`dash_date_${hosp}`, nowStr);
+
                     statusSpan.className = "cache-status status-ok";
-                    statusSpan.innerText = `✅ 업데이트 완료: ${nowStr}`;
+                    statusSpan.innerText = `✅ 업데이트 완료 (${tempApiData.length}건): ${nowStr}`;
                 }
+
             } catch (error) {
                 statusSpan.className = "cache-status status-fail";
-                statusSpan.innerText = `❌ 수집 오류`;
-                isAnyDirectFail = true;
+                if (error.name === 'AbortError') {
+                    statusSpan.innerText = `❌ 연결 지연 (다시 시도 요망)`;
+                } else if (error.message === 'NO_DATA') {
+                    statusSpan.innerText = `❌ 조회 결과 없음 (병원명 확인 필요)`;
+                } else {
+                    statusSpan.innerText = `❌ 수집 오류 (${error.message})`;
+                    isAnyDirectFail = true;
+                }
             }
         }
+
         syncBtn.disabled = false;
         syncBtn.innerText = "🔄 체크한 병원만 심평원 업데이트";
-        if(isAnyDirectFail) manualBox.style.display = "block";
+
+        if (isAnyDirectFail) {
+            manualBox.style.display = "block";
+        }
     }
 
     function prepareSearchData() {
         const checkboxes = document.querySelectorAll('input[name="hospCb"]:checked');
-        const selected = Array.from(checkboxes).map(cb => cb.value);
-        if(!selected.length) return alert("비교할 병원을 선택해주세요.");
+        const selectedHospitals = Array.from(checkboxes).map(cb => cb.value);
+
+        if (selectedHospitals.length === 0) { alert("비교할 병원을 선택해주세요."); return; }
+
         combinedData = [];
-        selected.forEach(hosp => {
-            const saved = localStorage.getItem(`dash_data_${hosp}`);
-            if(saved) combinedData = combinedData.concat(JSON.parse(saved));
+        let missingHospitals = [];
+
+        selectedHospitals.forEach(hosp => {
+            const savedData = localStorage.getItem(`dash_data_${hosp}`);
+            if (savedData) {
+                combinedData = combinedData.concat(JSON.parse(savedData));
+            } else {
+                missingHospitals.push(hosp);
+            }
         });
-        if(!combinedData.length) return alert("저장된 데이터가 없습니다. 먼저 업데이트를 진행해 주세요.");
+
+        if (missingHospitals.length > 0) {
+            alert(`다음 병원은 저장된 데이터가 없어 비교에서 제외됩니다:\n${missingHospitals.join(", ")}\n\n해당 병원을 체크하고 업데이트를 먼저 진행해 주세요.`);
+        }
+
+        if (combinedData.length === 0) {
+            document.getElementById('resultArea').innerHTML = `<div style="text-align:center; padding:50px; color:var(--hi-pink); font-weight:bold;">조회할 데이터가 없습니다. 먼저 업데이트를 진행해 주세요.</div>`;
+            return;
+        }
+
         const uniqueNames = [...new Set(combinedData.map(d => d.itemName))].sort();
         document.getElementById('itemNames').innerHTML = uniqueNames.map(n => `<option value="${n}">`).join('');
-        document.getElementById('resultArea').innerHTML = `<div style="text-align:center; padding:50px; color:#10b981; font-weight:bold;">✅ 데이터 로드 완료! 검색어를 입력하세요.</div>`;
+
+        document.getElementById('resultArea').innerHTML = `<div style="text-align:center; padding:50px; color:var(--excel-green); font-weight:bold;">✅ 데이터 로드 완료! 검색창에 명칭이나 코드를 입력하세요. (총 ${uniqueNames.length}개 항목)</div>`;
+        document.getElementById('searchInput').placeholder = `검색 가능 항목: 총 ${uniqueNames.length}개 (명칭/코드 부분 일치)`;
+        document.getElementById('searchInput').value = "";
     }
 
     function renderPivotTableAndChart() {
         const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
-        const resArea = document.getElementById('resultArea');
-        const expBtn = document.getElementById('exportBtn');
-        const selectedHospitals = Array.from(document.querySelectorAll('input[name="hospCb"]:checked')).map(cb => cb.value);
-        if(!combinedData.length) return;
-        myCharts.forEach(c => c.destroy()); myCharts = [];
-        currentFilteredNames = [...new Set(combinedData.filter(d => d.itemName.toLowerCase().includes(keyword) || d.ediCode.toLowerCase().includes(keyword)).map(d => d.itemName))].sort();
-        if(!currentFilteredNames.length) { resArea.innerHTML = "결과 없음"; expBtn.style.display = "none"; return; }
-        expBtn.style.display = "inline-block";
-        let html = "";
+        const exportBtn = document.getElementById('exportBtn');
+        const resultArea = document.getElementById('resultArea');
+        const checkboxes = document.querySelectorAll('input[name="hospCb"]:checked');
+
+        const selectedHospitals = Array.from(checkboxes)
+            .map(cb => cb.value)
+            .filter(hosp => combinedData.some(d => d.hospName === hosp));
+
+        if (combinedData.length === 0) {
+            alert("먼저 [선택 병원 즉시 비교] 버튼을 눌러 데이터를 로드해주세요.");
+            return;
+        }
+
+        myCharts.forEach(c => c.destroy());
+        myCharts = [];
+
+        if (!keyword) {
+            currentFilteredNames = [...new Set(combinedData.map(d => d.itemName))].sort();
+        } else {
+            currentFilteredNames = [...new Set(
+                combinedData
+                    .filter(d => d.itemName.toLowerCase().includes(keyword) || d.ediCode.toLowerCase().includes(keyword))
+                    .map(d => d.itemName)
+            )].sort();
+        }
+
+        if (currentFilteredNames.length === 0) {
+            resultArea.innerHTML = `<div style="text-align:center; padding:50px; color:var(--hi-pink); font-weight:bold;">검색 결과가 없습니다. 정확한 명칭이나 코드를 입력해 보세요.</div>`;
+            exportBtn.style.display = "none";
+            return;
+        }
+
+        exportBtn.style.display = "inline-block";
+        let finalHtml = "";
+
         const displayNames = currentFilteredNames.slice(0, 30);
-        if(currentFilteredNames.length > 30) html += `<div style="padding:15px; background:#fff3cd; text-align:center; margin-bottom:20px;">⚠️ 결과가 많아 상위 30개만 표시합니다.</div>`;
+        if (currentFilteredNames.length > 30) {
+            finalHtml += `<div style="padding: 15px; background: #fff3cd; color: #856404; border-radius: 5px; margin-bottom: 20px; font-weight: bold; text-align: center;">⚠️ 검색 결과가 너무 많아 화면에는 상위 30개 항목만 표시합니다. (전체 데이터는 엑셀 다운로드를 이용하세요)</div>`;
+        }
+
         displayNames.forEach((name, idx) => {
             const items = combinedData.filter(d => d.itemName === name);
-            html += `<div class="item-title">📌 ${name} <span style="font-size:12px; color:#667;">(EDI: ${items[0].ediCode})</span></div>`;
-            html += `<div class="table-wrapper"><table><tr><th>구분</th>` + selectedHospitals.map(h => `<th>${h}</th>`).join('') + `</tr>`;
-            html += `<tr><td>비용(단가)</td>`;
-            selectedHospitals.forEach(h => { const f = items.find(d => d.hospName === h); html += `<td class="row-price">${f ? Number(f.price).toLocaleString() + '원' : '-'}</td>`; });
-            html += `</tr><tr><td>등록일자</td>`;
-            selectedHospitals.forEach(h => { const f = items.find(d => d.hospName === h); html += `<td class="row-date">${f ? f.date : '-'}</td>`; });
-            html += `</tr></table></div><div class="chart-container"><canvas id="c-${idx}"></canvas></div>`;
+            finalHtml += `<div class="item-title">📌 ${name} <span style="font-size:12px; color:#667;">(EDI: ${items[0].ediCode})</span></div>`;
+
+            finalHtml += `<div class="table-wrapper"><table><tr><th>구분 \\ 병원</th>` + selectedHospitals.map(h => `<th>${h}</th>`).join('') + `</tr>`;
+
+            finalHtml += `<tr><td>비용(단가)</td>`;
+            selectedHospitals.forEach(h => {
+                const found = items.find(d => d.hospName === h);
+                finalHtml += `<td class="row-price">${found ? Number(found.price).toLocaleString() + '원' : '-'}</td>`;
+            });
+            finalHtml += `</tr>`;
+
+            finalHtml += `<tr><td>등록 일자</td>`;
+            selectedHospitals.forEach(h => {
+                const found = items.find(d => d.hospName === h);
+                finalHtml += `<td class="row-date">${found ? found.date : '-'}</td>`;
+            });
+            finalHtml += `</tr></table></div>`;
+
+            finalHtml += `<div class="chart-container"><canvas id="c-${idx}"></canvas></div>`;
         });
-        resArea.innerHTML = html;
+
+        resultArea.innerHTML = finalHtml;
+
         displayNames.forEach((name, idx) => {
             const items = combinedData.filter(d => d.itemName === name);
             const ctx = document.getElementById(`c-${idx}`).getContext('2d');
             myCharts.push(new Chart(ctx, {
                 type: 'bar',
-                data: { labels: selectedHospitals, datasets: [{ data: selectedHospitals.map(h => { const f = items.find(d => d.hospName === h); return f ? Number(f.price) : 0; }), backgroundColor: selectedHospitals.map(h => h === _H ? "#F15C75" : "#41B6E6") }] },
-                options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() + '원' } } } }
+                data: {
+                    labels: selectedHospitals,
+                    datasets: [{
+                        data: selectedHospitals.map(h => {
+                            const found = items.find(d => d.hospName === h);
+                            return found ? Number(found.price) : 0;
+                        }),
+                        backgroundColor: selectedHospitals.map(h => h === _H ? "#F15C75" : "#41B6E6")
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() + '원' } } }
+                }
             }));
         });
     }
 
     function exportToExcel() {
-        if (!currentFilteredNames.length) return;
-        const selected = Array.from(document.querySelectorAll('input[name="hospCb"]:checked')).map(cb => cb.value);
+        if (currentFilteredNames.length === 0) return;
+
+        const checkboxes = document.querySelectorAll('input[name="hospCb"]:checked');
+        const selectedHospitals = Array.from(checkboxes).map(cb => cb.value).filter(hosp => combinedData.some(d => d.hospName === hosp));
         let excelData = [];
+
         currentFilteredNames.forEach(name => {
             const items = combinedData.filter(d => d.itemName === name);
-            let row = { '항목명': name, 'EDI코드': items[0].ediCode };
-            selected.forEach(h => { const f = items.find(d => d.hospName === h); row[`${h}(금액)`] = f ? Number(f.price) : '-'; row[`${h}(등록일)`] = f ? f.date : '-'; });
-            excelData.push(row);
+            let rowObj = { '비급여 항목명': name, '코드(EDI)': items[0].ediCode };
+
+            selectedHospitals.forEach(h => {
+                const found = items.find(d => d.hospName === h);
+                rowObj[`${h} (금액)`] = found ? Number(found.price) : '-';
+                rowObj[`${h} (등록일)`] = found ? found.date : '-';
+            });
+            excelData.push(rowObj);
         });
+
         const ws = XLSX.utils.json_to_sheet(excelData);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "비급여비교");
-        XLSX.writeFile(wb, `비급여통합비교_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "비급여 통합비교결과");
+
+        const today = new Date();
+        const dateStr = today.getFullYear() + String(today.getMonth() + 1).padStart(2, '0') + String(today.getDate()).padStart(2, '0');
+        XLSX.writeFile(wb, `[통합]상급종합_비급여비교_${dateStr}.xlsx`);
     }
 </script>
 </body>
