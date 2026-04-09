@@ -21,7 +21,7 @@
         h1 { color: #1a365d; text-align: center; margin-bottom: 5px; margin-top: 55px; }
         .subtitle { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 15px; }
 
-        /* ★ 안정성이 검증된 hits.sh 전용 스타일 */
+        /* 누적 조회수 뱃지 스타일 */
         .counter-badge { text-align: center; margin-bottom: 25px; min-height: 25px; }
 
         .notice-box { background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 30px; color: #475569; font-size: 14px; line-height: 1.6; }
@@ -58,12 +58,11 @@
         th { background-color: #f8fafc; font-weight: bold; position: sticky; top: 0; }
         td:first-child, th:first-child { position: sticky; left: 0; background-color: #f1f5f9; font-weight: bold; z-index: 1; border-right: 2px solid #cbd5e1; }
         
-        .item-title { color: #0f172a; font-size: 18px; border-left: 5px solid var(--hi-blue); padding-left: 10px; margin-top: 40px; margin-bottom: 10px; font-weight: bold; }
+        .item-title { color: #0f172a; font-size: 18px; border-left: 5px solid #41B6E6; padding-left: 10px; margin-top: 40px; margin-bottom: 10px; font-weight: bold; }
         .row-price { font-weight: bold; color: var(--hi-pink); font-size: 16px; }
         .row-date { color: #64748b; font-size: 13px; }
         
         .chart-container { width: 100%; margin-top: 20px; margin-bottom: 40px; padding: 20px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 300px; }
-
         .footer { text-align: center; margin-top: 50px; padding-top: 25px; border-top: 2px dashed #e2e8f0; color: #64748b; font-size: 13px; line-height: 1.8; }
     </style>
 </head>
@@ -103,7 +102,6 @@
         <div class="search-box">
             <input type="text" id="searchInput" list="itemNames" placeholder="Step 1 완료 후, 검색어를 입력하세요.">
             <datalist id="itemNames"></datalist>
-            
             <button class="btn" id="searchBtn" style="background:var(--hi-blue);" onclick="renderPivotTableAndChart()">비교 검색</button>
             <button class="btn" id="exportBtn" onclick="exportToExcel()">📊 엑셀 다운로드</button>
         </div>
@@ -144,9 +142,7 @@
     };
 
     const hospitalList = Object.keys(hospSearchMap);
-    let combinedData = []; 
-    let myCharts = []; 
-    let currentFilteredNames = []; 
+    let combinedData = []; let myCharts = []; let currentFilteredNames = []; 
 
     window.onload = function() {
         renderHospitalGrid();
@@ -178,17 +174,13 @@
             const response = await fetch(resource, { ...options, signal: controller.signal });
             clearTimeout(id);
             return response;
-        } catch (e) {
-            clearTimeout(id);
-            throw e;
-        }
+        } catch (e) { clearTimeout(id); throw e; }
     };
 
     async function syncSelectedHospitals() {
         const checkboxes = document.querySelectorAll('input[name="hospCb"]:checked');
         const selected = Array.from(checkboxes).map(cb => cb.value);
         if(selected.length === 0) { alert("업데이트할 병원을 선택해주세요."); return; }
-
         const syncBtn = document.getElementById('syncBtn');
         syncBtn.disabled = true;
 
@@ -204,10 +196,7 @@
             syncBtn.innerText = `[${i+1}/${selected.length}] ${hospDisplayName} 수집 중...`;
 
             try {
-                let tempApiData = []; 
-                let pageNo = 1;
-                let hasMoreData = true;
-
+                let tempApiData = []; let pageNo = 1; let hasMoreData = true;
                 while(hasMoreData) {
                     const targetUrl = `https://apis.data.go.kr/B551182/nonPaymentDamtInfoService/getNonPaymentItemHospDtlList?ServiceKey=${API_KEY}&pageNo=${pageNo}&numOfRows=${CHUNK}&yadmNm=${encodeURIComponent(searchKeyword)}`;
                     let response;
@@ -218,11 +207,9 @@
                         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
                         response = await fetchWithTimeout(proxyUrl, { timeout: 25000 }); 
                     }
-                    
                     const xmlText = await response.text();
                     if(xmlText.includes("LIMITED")) throw new Error("LIMIT_EXCEEDED");
                     if(xmlText.includes("SERVICE_ERROR")) throw new Error("SERVER_DOWN");
-
                     const items = new DOMParser().parseFromString(xmlText, "text/xml").getElementsByTagName("item");
                     if(items.length > 0) {
                         Array.from(items).forEach(node => {
@@ -231,8 +218,7 @@
                             tempApiData.push({
                                 hospName: hospDisplayName, 
                                 itemName: (getText("npayKorNm") || getText("npayNm") || '명칭없음').trim(),
-                                price: getText("curAmt") || '0',
-                                ediCode: getText("npayCd") || '-',
+                                price: getText("curAmt") || '0', ediCode: getText("npayCd") || '-',
                                 date: d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}` : d
                             });
                         });
@@ -241,7 +227,6 @@
                         else { pageNo++; await new Promise(r => setTimeout(r, 1200)); } 
                     } else { hasMoreData = false; if(pageNo === 1) throw new Error("NO_DATA"); }
                 }
-
                 if(tempApiData.length > 0) {
                     const now = new Date();
                     const nowStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -250,13 +235,9 @@
                     statusSpan.className = "cache-status status-ok";
                     statusSpan.innerText = `✅ 최근: ${nowStr}`;
                 }
-            } catch (error) {
-                statusSpan.className = "cache-status status-fail";
-                statusSpan.innerText = `❌ 실패`;
-            }
+            } catch (error) { statusSpan.className = "cache-status status-fail"; statusSpan.innerText = `❌ 실패`; }
         }
-        syncBtn.disabled = false;
-        syncBtn.innerText = "🔄 체크한 병원만 심평원 업데이트";
+        syncBtn.disabled = false; syncBtn.innerText = "🔄 체크한 병원만 심평원 업데이트";
     }
 
     function prepareSearchData() {
@@ -284,8 +265,7 @@
         currentFilteredNames = [...new Set(combinedData.filter(d => d.itemName.toLowerCase().includes(keyword) || d.ediCode.toLowerCase().includes(keyword)).map(d => d.itemName))].sort();
         if(!currentFilteredNames.length) { resArea.innerHTML = "결과 없음"; expBtn.style.display = "none"; return; }
         expBtn.style.display = "inline-block";
-        let html = "";
-        const displayNames = currentFilteredNames.slice(0, 30);
+        let html = ""; const displayNames = currentFilteredNames.slice(0, 30);
         if(currentFilteredNames.length > 30) html += `<div style="padding:15px; background:#fff3cd; text-align:center; margin-bottom:20px;">⚠️ 상위 30개만 표시합니다. 전체는 엑셀을 이용하세요.</div>`;
         displayNames.forEach((name, idx) => {
             const items = combinedData.filter(d => d.itemName === name);
