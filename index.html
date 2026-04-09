@@ -20,12 +20,15 @@
         .user-info { position: absolute; top: 25px; right: 30px; font-weight: bold; color: var(--hi-blue-hover); font-size: 15px; background: white; padding: 8px 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid var(--hi-pink); }
 
         h1 { color: #1a365d; text-align: center; margin-bottom: 5px; margin-top: 30px; }
-        .subtitle { text-align: center; color: #64748b; margin-bottom: 25px; font-size: 15px; }
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 15px; font-size: 15px; }
+        
+        /* [추가] 조회수 뱃지 컨테이너 */
+        .counter-badge { text-align: center; margin-bottom: 25px; }
         
         .notice-box { background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 30px; color: #475569; font-size: 14px; line-height: 1.6; }
         .notice-box strong { color: #1e293b; font-size: 15px; display: block; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
 
-        /* ★ CORS 경고창 기본 숨김 처리 */
+        /* CORS 경고창 기본 숨김 처리 */
         .manual-box { display: none; background-color: #fff5f5; border: 2px solid #ffcdd2; border-radius: 8px; padding: 15px; margin-bottom: 20px; color: #b71c1c; font-size: 13px; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .manual-box a { color: #1976d2; font-weight: bold; }
@@ -84,6 +87,10 @@
 
     <h1>📊 상급종합병원 통합 비교 대시보드 [V3.1]</h1>
     <div class="subtitle">개별 병원별 오프라인 저장소 및 부분 업데이트 엔진 탑재</div>
+
+    <div class="counter-badge">
+        <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://real4goon.github.io/hallym-dashboard/&count_bg=%23F15C75&title_bg=%231A365D&title=조회수+(오늘/누적)&edge_flat=false" alt="방문자 수 카운터"/>
+    </div>
 
     <div class="notice-box">
         <strong>📢 업데이트(동기화) 전 필수 안내</strong>
@@ -185,9 +192,9 @@
         const manualBox = document.getElementById('corsManualBox');
         
         syncBtn.disabled = true;
-        manualBox.style.display = "none"; // 일단 경고창 숨김
+        manualBox.style.display = "none";
 
-        let isAnyDirectFail = false; // CORS 에러 감지용 플래그
+        let isAnyDirectFail = false; 
 
         for (let i = 0; i < selected.length; i++) {
             const hosp = selected[i];
@@ -262,7 +269,7 @@
                 else if(error.message === "NO_DATA") statusSpan.innerText = "❌ 결과 0건";
                 else {
                     statusSpan.innerText = "❌ 방화벽 차단됨";
-                    isAnyDirectFail = true; // 방화벽 차단(CORS) 에러 감지
+                    isAnyDirectFail = true; 
                 }
             }
         }
@@ -270,7 +277,6 @@
         syncBtn.disabled = false;
         syncBtn.innerText = "🔄 체크한 병원만 심평원 업데이트";
         
-        // ★ 에러가 하나라도 방화벽 문제라면 경고창 띄우기
         if(isAnyDirectFail) {
             manualBox.style.display = "block";
             alert("일부 병원의 업데이트가 방화벽에 막혔습니다. 상단의 🚨안내 박스를 확인해 주세요.");
@@ -279,7 +285,6 @@
         }
     }
 
-    // ★ Step 1. 저장된 데이터를 긁어모아 검색 준비 (datalist 생성)
     function prepareSearchData() {
         const checkboxes = document.querySelectorAll('input[name="hospCb"]:checked');
         const selectedHospitals = Array.from(checkboxes).map(cb => cb.value);
@@ -307,7 +312,6 @@
             return;
         }
 
-        // 검색용 datalist 생성 (기존 로직 복구)
         const uniqueNames = [...new Set(combinedData.map(d => d.itemName))].sort();
         document.getElementById('itemNames').innerHTML = uniqueNames.map(n => `<option value="${n}">`).join('');
         
@@ -316,14 +320,12 @@
         document.getElementById('searchInput').value = "";
     }
 
-    // ★ Step 2. 검색어 기반 피벗 테이블 & 차트 렌더링
     function renderPivotTableAndChart() {
         const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
         const exportBtn = document.getElementById('exportBtn');
         const resultArea = document.getElementById('resultArea');
         const checkboxes = document.querySelectorAll('input[name="hospCb"]:checked');
         
-        // 렌더링할 병원 목록은 '현재 체크된 병원' 중에서 '데이터가 존재하는 병원'만
         const selectedHospitals = Array.from(checkboxes)
                                     .map(cb => cb.value)
                                     .filter(hosp => combinedData.some(d => d.hospName === hosp));
@@ -336,7 +338,6 @@
         myCharts.forEach(c => c.destroy());
         myCharts = [];
 
-        // 검색어가 있으면 필터링, 없으면 전체(너무 많으면 브라우저 다운 방지를 위해 최대 30개 제한)
         if(!keyword) {
             currentFilteredNames = [...new Set(combinedData.map(d => d.itemName))].sort();
         } else {
@@ -352,7 +353,6 @@
         exportBtn.style.display = "inline-block";
         let finalHtml = "";
         
-        // 화면 렌더링 부하 방지를 위한 30개 제한
         const displayNames = currentFilteredNames.slice(0, 30);
         if(currentFilteredNames.length > 30) {
             finalHtml += `<div style="padding: 15px; background: #fff3cd; color: #856404; border-radius: 5px; margin-bottom: 20px; font-weight: bold; text-align: center;">⚠️ 검색 결과가 너무 많아 화면에는 상위 30개 항목만 표시합니다. (전체 데이터는 엑셀 다운로드를 이용하세요)</div>`;
